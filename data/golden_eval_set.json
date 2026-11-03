@@ -1,0 +1,138 @@
+[
+  {
+    "query_id": "q01_nv_sku",
+    "domain": "hw_specs",
+    "query": "What is the exact Product SKU and NVPN part number for the NVIDIA H100 NVL card?",
+    "ground_truth_answer": "The Product SKU is P1010 SKU 210 and the NVPN is 699-21010-0210-xxx.",
+    "expected_doc_id": "nvidia_h100_nvl_datasheet.md",
+    "expected_section_or_clause": "Table 1. Product Specifications",
+    "query_type": "exact_sku"
+  },
+  {
+    "query_id": "q02_nv_clocks",
+    "domain": "hw_specs",
+    "query": "What are the Base and Boost GPU clocks for the NVIDIA H100 NVL?",
+    "ground_truth_answer": "Base clock is 1,080 MHz and Boost clock is 1,785 MHz.",
+    "expected_doc_id": "nvidia_h100_nvl_datasheet.md",
+    "expected_section_or_clause": "Table 1. Product Specifications",
+    "query_type": "table_lookup"
+  },
+  {
+    "query_id": "q03_nv_power",
+    "domain": "hw_specs",
+    "query": "What is the maximum default board power and compliance limit for H100 NVL when strapped for 450W or 600W power mode?",
+    "ground_truth_answer": "400 W maximum (default) and 310 W power compliance limit.",
+    "expected_doc_id": "nvidia_h100_nvl_datasheet.md",
+    "expected_section_or_clause": "Table 1. Product Specifications",
+    "query_type": "table_lookup"
+  },
+  {
+    "query_id": "q04_nv_memory",
+    "domain": "hw_specs",
+    "query": "What is the peak memory bandwidth and memory bus width of the H100 NVL card?",
+    "ground_truth_answer": "Peak memory bandwidth is 3,938 GB/s with a memory bus width of 6,016 bits.",
+    "expected_doc_id": "nvidia_h100_nvl_datasheet.md",
+    "expected_section_or_clause": "Table 2. Memory Specifications",
+    "query_type": "table_lookup"
+  },
+  {
+    "query_id": "q05_nv_pci_ids",
+    "domain": "hw_specs",
+    "query": "What are the PCI Device ID, Vendor ID, and Sub-System ID for the NVIDIA H100 NVL?",
+    "ground_truth_answer": "Device ID: 0x2321, Vendor ID: 0x10DE, Sub-System ID: 0x1839.",
+    "expected_doc_id": "nvidia_h100_nvl_datasheet.md",
+    "expected_section_or_clause": "Table 1. Product Specifications",
+    "query_type": "exact_sku"
+  },
+  {
+    "query_id": "q06_riscv_zero",
+    "domain": "hw_specs",
+    "query": "Which RISC-V general-purpose register is hard-wired to constant zero?",
+    "ground_truth_answer": "Register x0 (ABI name zero) is hardwired to constant zero.",
+    "expected_doc_id": "riscv_unprivileged_isa.md",
+    "expected_section_or_clause": "General-Purpose Registers and ABI Names",
+    "query_type": "exact_sku"
+  },
+  {
+    "query_id": "q07_riscv_x1",
+    "domain": "hw_specs",
+    "query": "What is the ABI name, description, and saver rule for RISC-V register x1?",
+    "ground_truth_answer": "ABI name is ra, description is Return address, and saver rule is Caller.",
+    "expected_doc_id": "riscv_unprivileged_isa.md",
+    "expected_section_or_clause": "General-Purpose Registers and ABI Names",
+    "query_type": "table_lookup"
+  },
+  {
+    "query_id": "q08_riscv_callee",
+    "domain": "hw_specs",
+    "query": "Who is responsible for saving registers x8 and x9 in RISC-V calling conventions?",
+    "ground_truth_answer": "Registers x8 (s0/fp) and x9 (s1) are saved registers with Callee saver rule.",
+    "expected_doc_id": "riscv_unprivileged_isa.md",
+    "expected_section_or_clause": "General-Purpose Registers and ABI Names",
+    "query_type": "table_lookup"
+  },
+  {
+    "query_id": "q09_riscv_branch",
+    "domain": "hw_specs",
+    "query": "In RISC-V RV32I, which instruction format is used for conditional branch instructions?",
+    "ground_truth_answer": "The B-type format (imm[12|10:5], rs2, rs1, funct3, imm[4:1|11], opcode).",
+    "expected_doc_id": "riscv_unprivileged_isa.md",
+    "expected_section_or_clause": "Instruction Formats",
+    "query_type": "exact_sku"
+  },
+  {
+    "query_id": "q10_riscv_width",
+    "domain": "hw_specs",
+    "query": "What are the standard base integer register widths for RV32I and RV64I?",
+    "ground_truth_answer": "RV32I registers are 32 bits wide; RV64I registers are 64 bits wide.",
+    "expected_doc_id": "riscv_unprivileged_isa.md",
+    "expected_section_or_clause": "Overview and Base Architectures",
+    "query_type": "exact_sku"
+  },
+  {
+    "query_id": "q11_arbzg_break",
+    "domain": "germany_rulebook",
+    "query": "Under § 4 ArbZG, what is the mandatory minimum rest break for a daily working time of 8 hours, and what is the minimum permissible break interval?",
+    "ground_truth_answer": "At least 30 minutes for a working time of 6 to 9 hours, divided into intervals of at least 15 minutes each.",
+    "expected_doc_id": "germany_work_rulebook.md",
+    "expected_section_or_clause": "§ 4 ArbZG - Mandatory Rest Breaks",
+    "query_type": "table_lookup"
+  },
+  {
+    "query_id": "q12_arbzg_rest_period",
+    "domain": "germany_rulebook",
+    "query": "What uninterrupted daily rest period is required following the end of work under § 5 ArbZG?",
+    "ground_truth_answer": "An uninterrupted rest period of at least 11 hours is required.",
+    "expected_doc_id": "germany_work_rulebook.md",
+    "expected_section_or_clause": "§ 5 ArbZG - Daily Rest Periods",
+    "query_type": "exact_sku"
+  },
+  {
+    "query_id": "q13_kschg_weighting",
+    "domain": "germany_rulebook",
+    "query": "Under § 14 KSchG, what FTE calculation weighting factor is assigned to an employee working 25 hours per week?",
+    "ground_truth_answer": "Employees working more than 20 to 30 hours per week are factored at 0.75 FTE.",
+    "expected_doc_id": "germany_work_rulebook.md",
+    "expected_section_or_clause": "§ 14 KSchG - Threshold of Application & Employee Headcount Weighting",
+    "query_type": "table_lookup"
+  },
+  {
+    "query_id": "q14_burlg_days",
+    "domain": "germany_rulebook",
+    "query": "What is the statutory minimum annual vacation days for an employee on a standard 5-day working week under § 3 BUrlG?",
+    "ground_truth_answer": "20 working days per calendar year (based on the statutory 24 working days for a 6-day week).",
+    "expected_doc_id": "germany_work_rulebook.md",
+    "expected_section_or_clause": "§ 3 BUrlG - Statutory Minimum Annual Leave",
+    "query_type": "table_lookup"
+  },
+  {
+    "query_id": "q15_burlg_wartezeit",
+    "domain": "germany_rulebook",
+    "query": "Under § 4 BUrlG, how long is the waiting period (Wartezeit) before an employee acquires full annual leave entitlement?",
+    "ground_truth_answer": "The full statutory annual leave entitlement is acquired only after the employment relationship has existed continuously for 6 months.",
+    "expected_doc_id": "germany_work_rulebook.md",
+    "expected_section_or_clause": "§ 4 BUrlG - Waiting Period for Full Vacation Entitlement",
+    "query_type": "exact_sku"
+  }
+]
+

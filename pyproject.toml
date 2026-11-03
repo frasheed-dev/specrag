@@ -1,0 +1,55 @@
+[project]
+name = "specrag"
+version = "0.1.0"
+description = "Structure-Aware Hybrid RAG with Qdrant, BM25, and Cross-Encoder Reranking for Technical Specifications"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [
+    { name = "SpecRAG Contributor" }
+]
+dependencies = [
+    "pydantic>=2.7.0",
+    "pydantic-settings>=2.2.0",
+    "qdrant-client>=1.9.0",
+    "rank-bm25>=0.2.2",
+    "sentence-transformers>=3.0.0",
+    "openai>=1.30.0",
+    "rich>=13.7.0",
+    "typer>=0.12.0",
+    "python-dotenv>=1.0.0",
+    "httpx>=0.27.0",
+    "datasets>=2.19.0",
+    "tabulate>=0.9.0",
+    "markitdown>=0.0.1a4",
+    "pymupdf4llm>=0.0.17",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+    "ruff>=0.4.0",
+]
+
+[project.scripts]
+specrag = "specrag.cli:app"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP"]
+ignore = ["E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+asyncio_default_fixture_loop_scope = "function"
+norecursedirs = [".*", ".venv", ".agents", "data", "qdrant_db", "build", "dist"]
+
