@@ -2,6 +2,7 @@
 
 import json
 import logging
+import re
 import time
 from pathlib import Path
 
@@ -49,6 +50,64 @@ class BenchmarkRunner:
     def load_golden_eval_set(self) -> list[dict]:
         """Load the 15 golden evaluation items."""
         return json.loads(self.golden_eval_path.read_text(encoding="utf-8"))
+
+    def load_benchmark_data(
+        self, dataset: str = "local"
+    ) -> tuple[dict[str, str], list[dict]]:
+        """Load document corpus and golden evaluation queries by dataset identifier.
+
+        Datasets:
+            - 'local': NVIDIA H100 NVL, RISC-V ISA, and German Rulebook specs (15 queries)
+            - 't2' or 't2_ragbench': T2-RAGBench Financial/Enterprise text-and-tables (20 queries)
+            - 'ibm' or 'ibm_techreport': IBM TechReport Enterprise processor specs (20 queries)
+        """
+        benchmarks_dir = settings.project_root / "data" / "benchmarks"
+        d = dataset.lower().strip()
+        if d in ("t2", "t2_ragbench"):
+            corpus_path = benchmarks_dir / "specs" / "t2_ragbench_corpus.md"
+            eval_path = benchmarks_dir / "t2_ragbench_20.json"
+            docs = {corpus_path.name: corpus_path.read_text(encoding="utf-8")}
+            golden = json.loads(eval_path.read_text(encoding="utf-8"))
+            return docs, golden
+
+        elif d in ("ibm", "ibm_techreport"):
+            corpus_path = benchmarks_dir / "specs" / "ibm_techreport_corpus.md"
+            eval_path = benchmarks_dir / "ibm_techreport_20.json"
+            docs = {corpus_path.name: corpus_path.read_text(encoding="utf-8")}
+            golden = json.loads(eval_path.read_text(encoding="utf-8"))
+            return docs, golden
+
+        else:
+            return self.load_spec_documents(), self.load_golden_eval_set()
+
+    def evaluate_answer_correctness(self, predicted: str, ground_truth: str) -> float:
+        """Evaluate factual/numerical correctness between predicted and ground truth answers.
+
+        Applies normalization for commas, currency symbols, percentages, and scaling.
+        Returns: 1.0 if match, 0.0 otherwise.
+        """
+        if not predicted or not ground_truth:
+            return 0.0
+
+        p = str(predicted).strip().lower()
+        g = str(ground_truth).strip().lower()
+
+        if p == g or g in p:
+            return 1.0
+
+        def normalize_str(s: str) -> str:
+            s = s.replace(",", "").replace("$", "").replace("%", "")
+            s = s.replace("million", "m").replace("billion", "b")
+            s = re.sub(r"\s+", "", s)
+            return s
+
+        norm_p = normalize_str(p)
+        norm_g = normalize_str(g)
+
+        if norm_p == norm_g or norm_g in norm_p or norm_p in norm_g:
+            return 1.0
+
+        return 0.0
 
     def setup_naive_pipeline(
         self, docs: dict[str, str]
@@ -118,13 +177,17 @@ class BenchmarkRunner:
 
         return hit_at_5, mrr, table_intact
 
-    def run_benchmark(self, run_llm_generation: bool = False) -> dict:
-        """Run complete benchmark on the 15 Golden Queries.
+    def run_benchmark(
+        self, dataset: str = "local", run_llm_generation: bool = False
+    ) -> dict:
+        """Run complete benchmark on the selected dataset suite.
 
-        If run_llm_generation=False, runs deterministic retrieval metrics.
+        Datasets:
+            - 'local': 15 Hardware and Legal specification queries
+            - 't2' or 't2_ragbench': 20 T2-RAGBench Financial/Enterprise table queries
+            - 'ibm' or 'ibm_techreport': 20 IBM TechReport Processor and Interconnect queries
         """
-        docs = self.load_spec_documents()
-        golden_set = self.load_golden_eval_set()
+        docs, golden_set = self.load_benchmark_data(dataset)
 
         print("\n[SpecRAG] Initializing Phase A: Naive Baseline Pipeline...")
         naive_retriever, naive_chunks = self.setup_naive_pipeline(docs)
