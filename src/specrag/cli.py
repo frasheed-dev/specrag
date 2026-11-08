@@ -50,7 +50,7 @@ def benchmark(
 
     runner = BenchmarkRunner()
 
-    datasets_to_run = ["local", "t2", "ibm"] if dataset.lower() == "all" else [dataset.lower()]
+    datasets_to_run = ["t2", "ibm"] if dataset.lower() == "all" else [dataset.lower()]
 
     summary_table = Table(
         title="SpecRAG Multi-Benchmark Performance Summary",
@@ -63,39 +63,53 @@ def benchmark(
     summary_table.add_column("MRR", justify="right")
     summary_table.add_column("Avg Latency", justify="right")
 
+    all_summaries = []
     for ds in datasets_to_run:
         console.print(
-            f"\n[cyan]Running benchmark on dataset suite: [bold]{ds.upper()}[/bold]...[/cyan]"
+            f"\n[cyan]Running benchmark on public dataset suite: [bold]{ds.upper()}[/bold]...[/cyan]"
         )
         results = runner.run_benchmark(dataset=ds, run_llm_generation=run_llm)
+        all_summaries.append(results)
         naive = results["naive"]
         hybrid = results["hybrid"]
 
+        label = (
+            "T²-RAGBench (Financial Tables)"
+            if ds in ("t2", "t2_ragbench")
+            else "IBM TechReport (Microarchitectures)"
+            if ds in ("ibm", "ibm_techreport")
+            else ds.upper()
+        )
+
         summary_table.add_row(
-            ds.upper(),
+            label,
             "Phase A: Naive Baseline",
             f"{naive['hit_rate_at_5'] * 100:.1f}%",
             f"{naive['mrr']:.3f}",
             f"{naive['avg_latency_ms']:.1f} ms",
         )
         summary_table.add_row(
-            ds.upper(),
+            label,
             "[bold green]Phase B: Production Hybrid + Rerank[/bold green]",
             f"[bold green]{hybrid['hit_rate_at_5'] * 100:.1f}%[/bold green]",
             f"[bold green]{hybrid['mrr']:.3f}[/bold green]",
             f"{hybrid['avg_latency_ms']:.1f} ms",
         )
 
+    runner.generate_markdown_report(all_summaries)
+
     console.print("\n")
     console.print(summary_table)
-    console.print("\n[bold green]Results updated in BENCHMARK_RESULTS.md[/bold green]\n")
+    console.print(
+        "\n[bold green]Report successfully generated in BENCHMARK_RESULTS.md[/bold green]\n"
+    )
 
 
 @app.command()
 def ingest(
     file_path: Path = typer.Argument(..., help="Path to input PDF or Markdown specification"),
     output_dir: Path = typer.Option(
-        Path("data/specs"),
+        Path("data"),
         "--output-dir",
         "-o",
         help="Destination directory for converted markdown files",

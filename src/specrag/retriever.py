@@ -9,7 +9,9 @@ Includes:
 """
 
 import logging
+import os
 import re
+import warnings
 from abc import ABC, abstractmethod
 from pathlib import Path
 
@@ -20,6 +22,9 @@ from sentence_transformers import CrossEncoder, SentenceTransformer
 
 from specrag.config import settings
 from specrag.schemas import DocumentChunk
+
+# Silence non-critical unauthenticated rate limit warnings if HF_TOKEN is omitted
+warnings.filterwarnings("ignore", message=".*unauthenticated requests to the HF Hub.*")
 
 logger = logging.getLogger("specrag.retriever")
 
@@ -62,7 +67,10 @@ class QdrantDenseRetriever(BaseRetriever):
     def model(self) -> SentenceTransformer:
         if self._model is None:
             logger.info(f"Loading dense embedding model: {self.model_name}")
-            self._model = SentenceTransformer(self.model_name)
+            token = (
+                settings.hf_token or os.getenv("HF_TOKEN") or os.getenv("HUGGING_FACE_HUB_TOKEN")
+            )
+            self._model = SentenceTransformer(self.model_name, token=token)
         return self._model
 
     def index_chunks(self, chunks: list[DocumentChunk]) -> None:
@@ -213,7 +221,13 @@ class CrossEncoderReranker:
     def reranker(self) -> CrossEncoder:
         if self._reranker is None:
             logger.info(f"Loading Cross-Encoder model: {self.model_name}")
-            self._reranker = CrossEncoder(self.model_name)
+            token = (
+                settings.hf_token or os.getenv("HF_TOKEN") or os.getenv("HUGGING_FACE_HUB_TOKEN")
+            )
+            try:
+                self._reranker = CrossEncoder(self.model_name, token=token)
+            except TypeError:
+                self._reranker = CrossEncoder(self.model_name)
         return self._reranker
 
     def rerank(

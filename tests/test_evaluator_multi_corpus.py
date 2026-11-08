@@ -23,13 +23,10 @@ def test_evaluate_answer_correctness():
 
 
 def test_load_dataset_by_name():
-    """Verify loading different benchmark suites by name."""
-    runner = BenchmarkRunner()
+    """Verify loading different public benchmark suites by name."""
+    import pytest
 
-    # Local hardware & legal specs
-    docs_local, golden_local = runner.load_benchmark_data("local")
-    assert len(golden_local) == 15
-    assert len(docs_local) >= 3
+    runner = BenchmarkRunner()
 
     # T2-RAGBench
     docs_t2, golden_t2 = runner.load_benchmark_data("t2")
@@ -40,3 +37,7 @@ def test_load_dataset_by_name():
     docs_ibm, golden_ibm = runner.load_benchmark_data("ibm")
     assert len(golden_ibm) == 20
     assert len(docs_ibm) >= 1
+
+    # Invalid dataset raises ValueError
+    with pytest.raises(ValueError):
+        runner.load_benchmark_data("invalid_corpus")

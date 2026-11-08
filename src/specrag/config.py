@@ -35,8 +35,11 @@ class Settings(BaseSettings):
     embedding_model_name: str = "BAAI/bge-small-en-v1.5"
     reranker_model_name: str = "BAAI/bge-reranker-base"
 
+    # Hugging Face Authentication & Download Cache
+    hf_token: str | None = None
+
     # Supported Benchmark Corpora
-    corpora: tuple[str, ...] = ("nvidia_ai_hw", "hf_tech_bench", "arm_riscv_ip")
+    corpora: tuple[str, ...] = ("t2_ragbench", "ibm_techreport")
 
 
 settings = Settings()
