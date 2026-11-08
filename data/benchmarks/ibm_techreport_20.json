@@ -1,0 +1,182 @@
+[
+  {
+    "query_id": "ibm_01_power10_process",
+    "domain": "enterprise_tech_specs",
+    "query": "On which semiconductor process node technology is the IBM Power10 processor fabricated?",
+    "ground_truth_answer": "7nm EUV",
+    "expected_doc_id": "ibm_techreport_corpus.md",
+    "expected_section_or_clause": "Module 1: IBM Power10 Processor Microarchitecture",
+    "query_type": "exact_sku"
+  },
+  {
+    "query_id": "ibm_02_mma_engines",
+    "domain": "enterprise_tech_specs",
+    "query": "How many Matrix Multiply Accelerator (MMA) engines are present per SMT8 core in Power10?",
+    "ground_truth_answer": "4 MMA engines per SMT8 core",
+    "expected_doc_id": "ibm_techreport_corpus.md",
+    "expected_section_or_clause": "Table 1. Power10 Microarchitectural Parameters",
+    "query_type": "table_lookup"
+  },
+  {
+    "query_id": "ibm_03_l3_cache",
+    "domain": "enterprise_tech_specs",
+    "query": "What is the total shared L3 cache capacity of the IBM Power10 processor?",
+    "ground_truth_answer": "120 MB",
+    "expected_doc_id": "ibm_techreport_corpus.md",
+    "expected_section_or_clause": "Table 1. Power10 Microarchitectural Parameters",
+    "query_type": "table_lookup"
+  },
+  {
+    "query_id": "ibm_04_peak_mem_bw",
+    "domain": "enterprise_tech_specs",
+    "query": "What is the peak memory bandwidth per socket for IBM Power10?",
+    "ground_truth_answer": "409 GB/s",
+    "expected_doc_id": "ibm_techreport_corpus.md",
+    "expected_section_or_clause": "Table 1. Power10 Microarchitectural Parameters",
+    "query_type": "table_lookup"
+  },
+  {
+    "query_id": "ibm_05_l2_cache_smt8",
+    "domain": "enterprise_tech_specs",
+    "query": "What is the L2 cache size per core in SMT8 core mode on Power10?",
+    "ground_truth_answer": "2 MB",
+    "expected_doc_id": "ibm_techreport_corpus.md",
+    "expected_section_or_clause": "Table 1. Power10 Microarchitectural Parameters",
+    "query_type": "table_lookup"
+  },
+  {
+    "query_id": "ibm_06_poweraxon_rate",
+    "domain": "enterprise_tech_specs",
+    "query": "What is the raw signaling rate of the PowerAXON SMP interface links?",
+    "ground_truth_answer": "32 Gbps NRZ",
+    "expected_doc_id": "ibm_techreport_corpus.md",
+    "expected_section_or_clause": "Table 2. PowerAXON and PCIe Subsystem Bandwidth",
+    "query_type": "exact_sku"
+  },
+  {
+    "query_id": "ibm_07_poweraxon_bw",
+    "domain": "enterprise_tech_specs",
+    "query": "What is the aggregate bidirectional bandwidth of PowerAXON SMP links per socket?",
+    "ground_truth_answer": "1 TB/s",
+    "expected_doc_id": "ibm_techreport_corpus.md",
+    "expected_section_or_clause": "Table 2. PowerAXON and PCIe Subsystem Bandwidth",
+    "query_type": "table_lookup"
+  },
+  {
+    "query_id": "ibm_08_pcie_lanes",
+    "domain": "enterprise_tech_specs",
+    "query": "How many PCIe Gen5 lanes are supported per Power10 socket?",
+    "ground_truth_answer": "64 lanes",
+    "expected_doc_id": "ibm_techreport_corpus.md",
+    "expected_section_or_clause": "Table 2. PowerAXON and PCIe Subsystem Bandwidth",
+    "query_type": "table_lookup"
+  },
+  {
+    "query_id": "ibm_09_pcie_bw",
+    "domain": "enterprise_tech_specs",
+    "query": "What is the aggregate bidirectional bandwidth of the PCIe Gen5 host subsystem?",
+    "ground_truth_answer": "256 GB/s",
+    "expected_doc_id": "ibm_techreport_corpus.md",
+    "expected_section_or_clause": "Table 2. PowerAXON and PCIe Subsystem Bandwidth",
+    "query_type": "table_lookup"
+  },
+  {
+    "query_id": "ibm_10_omi_channels",
+    "domain": "enterprise_tech_specs",
+    "query": "How many Open Memory Interface (OMI) channels are integrated per socket?",
+    "ground_truth_answer": "16 channels",
+    "expected_doc_id": "ibm_techreport_corpus.md",
+    "expected_section_or_clause": "Table 2. PowerAXON and PCIe Subsystem Bandwidth",
+    "query_type": "table_lookup"
+  },
+  {
+    "query_id": "ibm_11_omi_peak_bw",
+    "domain": "enterprise_tech_specs",
+    "query": "What is the peak aggregate bandwidth across all OMI channels on Power10?",
+    "ground_truth_answer": "1,024 GB/s",
+    "expected_doc_id": "ibm_techreport_corpus.md",
+    "expected_section_or_clause": "Table 2. PowerAXON and PCIe Subsystem Bandwidth",
+    "query_type": "table_lookup"
+  },
+  {
+    "query_id": "ibm_12_aes_gcm_throughput",
+    "domain": "enterprise_tech_specs",
+    "query": "What is the maximum AES-GCM 256-bit cryptographic throughput per socket?",
+    "ground_truth_answer": "240 Gbps",
+    "expected_doc_id": "ibm_techreport_corpus.md",
+    "expected_section_or_clause": "Table 3. Core Cryptographic Throughput Specifications",
+    "query_type": "table_lookup"
+  },
+  {
+    "query_id": "ibm_13_sha3_engines",
+    "domain": "enterprise_tech_specs",
+    "query": "How many SHA-3 hardware acceleration engines are integrated per Power10 core?",
+    "ground_truth_answer": "2",
+    "expected_doc_id": "ibm_techreport_corpus.md",
+    "expected_section_or_clause": "Table 3. Core Cryptographic Throughput Specifications",
+    "query_type": "table_lookup"
+  },
+  {
+    "query_id": "ibm_14_sha3_throughput",
+    "domain": "enterprise_tech_specs",
+    "query": "What is the maximum SHA-3 cryptographic throughput per socket?",
+    "ground_truth_answer": "160 Gbps",
+    "expected_doc_id": "ibm_techreport_corpus.md",
+    "expected_section_or_clause": "Table 3. Core Cryptographic Throughput Specifications",
+    "query_type": "table_lookup"
+  },
+  {
+    "query_id": "ibm_15_dilithium_rate",
+    "domain": "enterprise_tech_specs",
+    "query": "What is the post-quantum Dilithium Level 3 verification throughput per socket?",
+    "ground_truth_answer": "85,000 verifications/sec",
+    "expected_doc_id": "ibm_techreport_corpus.md",
+    "expected_section_or_clause": "Table 3. Core Cryptographic Throughput Specifications",
+    "query_type": "table_lookup"
+  },
+  {
+    "query_id": "ibm_16_kyber_rate",
+    "domain": "enterprise_tech_specs",
+    "query": "What is the Kyber-768 key encapsulation throughput per socket on Power10?",
+    "ground_truth_answer": "120,000 encapsulations/sec",
+    "expected_doc_id": "ibm_techreport_corpus.md",
+    "expected_section_or_clause": "Table 3. Core Cryptographic Throughput Specifications",
+    "query_type": "table_lookup"
+  },
+  {
+    "query_id": "ibm_17_cores_smt4",
+    "domain": "enterprise_tech_specs",
+    "query": "How many cores per socket are supported when operating in SMT4 mode?",
+    "ground_truth_answer": "Up to 30",
+    "expected_doc_id": "ibm_techreport_corpus.md",
+    "expected_section_or_clause": "Table 1. Power10 Microarchitectural Parameters",
+    "query_type": "table_lookup"
+  },
+  {
+    "query_id": "ibm_18_nvlink_c2c_bw",
+    "domain": "enterprise_tech_specs",
+    "query": "What is the aggregate bandwidth for NVLink-C2C bridge mode on Power10?",
+    "ground_truth_answer": "400 GB/s",
+    "expected_doc_id": "ibm_techreport_corpus.md",
+    "expected_section_or_clause": "Table 2. PowerAXON and PCIe Subsystem Bandwidth",
+    "query_type": "table_lookup"
+  },
+  {
+    "query_id": "ibm_19_nvlink_c2c_rate",
+    "domain": "enterprise_tech_specs",
+    "query": "What signaling rate is specified for NVLink-C2C bridge mode links?",
+    "ground_truth_answer": "25 Gbps",
+    "expected_doc_id": "ibm_techreport_corpus.md",
+    "expected_section_or_clause": "Table 2. PowerAXON and PCIe Subsystem Bandwidth",
+    "query_type": "exact_sku"
+  },
+  {
+    "query_id": "ibm_20_aes_engines_per_core",
+    "domain": "enterprise_tech_specs",
+    "query": "How many dedicated AES-GCM hardware engines are in each Power10 core?",
+    "ground_truth_answer": "4",
+    "expected_doc_id": "ibm_techreport_corpus.md",
+    "expected_section_or_clause": "Table 3. Core Cryptographic Throughput Specifications",
+    "query_type": "table_lookup"
+  }
+]

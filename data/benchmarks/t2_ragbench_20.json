@@ -1,0 +1,182 @@
+[
+  {
+    "query_id": "t2_01_cloud_rev_2023",
+    "domain": "finance_numerical_tables",
+    "query": "What was the Google Cloud segment revenue for FY 2023 in millions of dollars?",
+    "ground_truth_answer": "33,088",
+    "expected_doc_id": "t2_ragbench_corpus.md",
+    "expected_section_or_clause": "Table 1. Alphabet Segment Operating Performance",
+    "query_type": "table_lookup"
+  },
+  {
+    "query_id": "t2_02_cloud_margin_2023",
+    "domain": "finance_numerical_tables",
+    "query": "What was Google Cloud's operating margin percentage in 2023?",
+    "ground_truth_answer": "5.2%",
+    "expected_doc_id": "t2_ragbench_corpus.md",
+    "expected_section_or_clause": "Table 1. Alphabet Segment Operating Performance",
+    "query_type": "table_lookup"
+  },
+  {
+    "query_id": "t2_03_services_rev_2022",
+    "domain": "finance_numerical_tables",
+    "query": "What were the Google Services revenues in FY 2022?",
+    "ground_truth_answer": "253,528",
+    "expected_doc_id": "t2_ragbench_corpus.md",
+    "expected_section_or_clause": "Table 1. Alphabet Segment Operating Performance",
+    "query_type": "table_lookup"
+  },
+  {
+    "query_id": "t2_04_total_rev_2021",
+    "domain": "finance_numerical_tables",
+    "query": "What was Alphabet's total consolidated revenue in FY 2021?",
+    "ground_truth_answer": "257,637",
+    "expected_doc_id": "t2_ragbench_corpus.md",
+    "expected_section_or_clause": "Table 1. Alphabet Segment Operating Performance",
+    "query_type": "table_lookup"
+  },
+  {
+    "query_id": "t2_05_total_margin_2023",
+    "domain": "finance_numerical_tables",
+    "query": "What was Alphabet's consolidated operating margin in 2023?",
+    "ground_truth_answer": "27.4%",
+    "expected_doc_id": "t2_ragbench_corpus.md",
+    "expected_section_or_clause": "Table 1. Alphabet Segment Operating Performance",
+    "query_type": "table_lookup"
+  },
+  {
+    "query_id": "t2_06_msft_cloud_2024",
+    "domain": "finance_numerical_tables",
+    "query": "What was Microsoft Cloud's annual revenue in FY 2024 in billions of dollars?",
+    "ground_truth_answer": "137.4",
+    "expected_doc_id": "t2_ragbench_corpus.md",
+    "expected_section_or_clause": "Table 2. Microsoft Cloud Annual Growth & Commercial Metrics",
+    "query_type": "table_lookup"
+  },
+  {
+    "query_id": "t2_07_azure_growth_2023",
+    "domain": "finance_numerical_tables",
+    "query": "What was the Azure constant-currency revenue growth in FY 2023?",
+    "ground_truth_answer": "34%",
+    "expected_doc_id": "t2_ragbench_corpus.md",
+    "expected_section_or_clause": "Table 2. Microsoft Cloud Annual Growth & Commercial Metrics",
+    "query_type": "table_lookup"
+  },
+  {
+    "query_id": "t2_08_msft_rpo_2024",
+    "domain": "finance_numerical_tables",
+    "query": "What was Microsoft's commercial remaining performance obligation in FY 2024?",
+    "ground_truth_answer": "269",
+    "expected_doc_id": "t2_ragbench_corpus.md",
+    "expected_section_or_clause": "Table 2. Microsoft Cloud Annual Growth & Commercial Metrics",
+    "query_type": "table_lookup"
+  },
+  {
+    "query_id": "t2_09_cloud_gross_margin_2022",
+    "domain": "finance_numerical_tables",
+    "query": "What was Microsoft Intelligent Cloud gross margin in FY 2022?",
+    "ground_truth_answer": "73%",
+    "expected_doc_id": "t2_ragbench_corpus.md",
+    "expected_section_or_clause": "Table 2. Microsoft Cloud Annual Growth & Commercial Metrics",
+    "query_type": "table_lookup"
+  },
+  {
+    "query_id": "t2_10_tsmc_capex_2023",
+    "domain": "finance_numerical_tables",
+    "query": "How many billions of dollars did TSMC spend on capital expenditures in 2023?",
+    "ground_truth_answer": "30.4",
+    "expected_doc_id": "t2_ragbench_corpus.md",
+    "expected_section_or_clause": "Table 3. Semiconductor Equipment & Fab Capex",
+    "query_type": "table_lookup"
+  },
+  {
+    "query_id": "t2_11_intel_foundry_2024",
+    "domain": "finance_numerical_tables",
+    "query": "What is Intel Foundry's capex budget for 2024 in billions of dollars?",
+    "ground_truth_answer": "26.5",
+    "expected_doc_id": "t2_ragbench_corpus.md",
+    "expected_section_or_clause": "Table 3. Semiconductor Equipment & Fab Capex",
+    "query_type": "table_lookup"
+  },
+  {
+    "query_id": "t2_12_samsung_node_focus",
+    "domain": "finance_numerical_tables",
+    "query": "What primary semiconductor process node focus is listed for Samsung Foundry?",
+    "ground_truth_answer": "3nm MBCFET",
+    "expected_doc_id": "t2_ragbench_corpus.md",
+    "expected_section_or_clause": "Table 3. Semiconductor Equipment & Fab Capex",
+    "query_type": "exact_sku"
+  },
+  {
+    "query_id": "t2_13_tsmc_node_focus",
+    "domain": "finance_numerical_tables",
+    "query": "Which advanced process nodes are listed as TSMC's primary focus?",
+    "ground_truth_answer": "N3E / N2 GAA",
+    "expected_doc_id": "t2_ragbench_corpus.md",
+    "expected_section_or_clause": "Table 3. Semiconductor Equipment & Fab Capex",
+    "query_type": "exact_sku"
+  },
+  {
+    "query_id": "t2_14_asml_high_na",
+    "domain": "finance_numerical_tables",
+    "query": "Which High-NA EUV lithography tool model is targeted under ASML bookings?",
+    "ground_truth_answer": "EXE:5000",
+    "expected_doc_id": "t2_ragbench_corpus.md",
+    "expected_section_or_clause": "Table 3. Semiconductor Equipment & Fab Capex",
+    "query_type": "exact_sku"
+  },
+  {
+    "query_id": "t2_15_intel_capex_2022",
+    "domain": "finance_numerical_tables",
+    "query": "What was Intel Foundry's capital expenditure in 2022?",
+    "ground_truth_answer": "19.0",
+    "expected_doc_id": "t2_ragbench_corpus.md",
+    "expected_section_or_clause": "Table 3. Semiconductor Equipment & Fab Capex",
+    "query_type": "table_lookup"
+  },
+  {
+    "query_id": "t2_16_samsung_capex_2022",
+    "domain": "finance_numerical_tables",
+    "query": "What was Samsung Foundry's capex in 2022 in billions of dollars?",
+    "ground_truth_answer": "39.0",
+    "expected_doc_id": "t2_ragbench_corpus.md",
+    "expected_section_or_clause": "Table 3. Semiconductor Equipment & Fab Capex",
+    "query_type": "table_lookup"
+  },
+  {
+    "query_id": "t2_17_azure_growth_2024",
+    "domain": "finance_numerical_tables",
+    "query": "What was Azure constant currency growth rate in FY 2024?",
+    "ground_truth_answer": "30%",
+    "expected_doc_id": "t2_ragbench_corpus.md",
+    "expected_section_or_clause": "Table 2. Microsoft Cloud Annual Growth & Commercial Metrics",
+    "query_type": "table_lookup"
+  },
+  {
+    "query_id": "t2_18_other_bets_rev_2023",
+    "domain": "finance_numerical_tables",
+    "query": "What were Alphabet Other Bets revenues in 2023?",
+    "ground_truth_answer": "1,527",
+    "expected_doc_id": "t2_ragbench_corpus.md",
+    "expected_section_or_clause": "Table 1. Alphabet Segment Operating Performance",
+    "query_type": "table_lookup"
+  },
+  {
+    "query_id": "t2_19_cloud_gross_margin_2024",
+    "domain": "finance_numerical_tables",
+    "query": "What was Microsoft Intelligent Cloud gross margin in 2024?",
+    "ground_truth_answer": "71%",
+    "expected_doc_id": "t2_ragbench_corpus.md",
+    "expected_section_or_clause": "Table 2. Microsoft Cloud Annual Growth & Commercial Metrics",
+    "query_type": "table_lookup"
+  },
+  {
+    "query_id": "t2_20_asml_bookings_2023",
+    "domain": "finance_numerical_tables",
+    "query": "What were ASML net bookings in 2023 in billions of dollars?",
+    "ground_truth_answer": "28.2",
+    "expected_doc_id": "t2_ragbench_corpus.md",
+    "expected_section_or_clause": "Table 3. Semiconductor Equipment & Fab Capex",
+    "query_type": "table_lookup"
+  }
+]
