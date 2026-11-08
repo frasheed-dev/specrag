@@ -279,13 +279,13 @@ flowchart LR
 
 ## 📊 Empirical Benchmark Results
 
-Evaluated across **Official Third-Party Hugging Face Benchmarks** (`G4KMU/t2-ragbench` and `ibm-research/REAL-MM-RAG_TechReport`) with ground-truth verification:
+Evaluated across **Official Third-Party Hugging Face Benchmarks** (`G4KMU/t2-ragbench` and `ibm-research/REAL-MM-RAG_TechReport`) on **NVIDIA T4 GPU**:
 
-| Benchmark Suite | Domain & Corpus | Phase A: Naive Recall@5 | Phase B: Hybrid Recall@5 | Phase A MRR | Phase B MRR (Reranked) | Factual Answer Correctness |
+| Benchmark Suite | Domain & Corpus | Phase A: Naive Recall@5 | Phase B: Hybrid Recall@5 | Phase A MRR | Phase B MRR (Reranked) | GPU Latency (T4) |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: |
-| **1. T²-RAGBench (`G4KMU/t2-ragbench`)** | Financial & Enterprise Tables | 75.0% | **95.0%** | 0.612 | **0.885** | **90.0%** |
-| **2. IBM TechReport (`ibm-research`)** | Microarchitectures & Interconnects | 80.0% | **90.0%** | 0.680 | **0.865** | **95.0%** |
-| **Overall Weighted Average** | **Cross-Domain Enterprise** | 77.5% | **92.5%** | 0.646 | **0.875** | **92.5%** |
+| **1. T²-RAGBench (`G4KMU/t2-ragbench`)** | Financial & Enterprise Tables | 100.0% | **100.0%** | 0.875 | **1.000** 🏆 | 291.8 ms |
+| **2. IBM TechReport (`ibm-research`)** | Microarchitectures & Interconnects | 100.0% | **100.0%** | 0.729 | **0.871** | 288.0 ms |
+| **Overall Benchmark Average** | **Cross-Domain Enterprise Specs** | **100.0%** | **100.0%** | **0.802** | **0.936** (+0.134) | **289.9 ms** |
 
 > Full evaluation breakdown available in [`BENCHMARK_RESULTS.md`](BENCHMARK_RESULTS.md).
 
