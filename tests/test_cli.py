@@ -30,3 +30,10 @@ def test_cli_ingest_missing_file():
     result = runner.invoke(app, ["ingest", "non_existent_file.pdf"])
     assert result.exit_code != 0
     assert "Error" in result.stdout or "not found" in result.stdout
+
+
+def test_cli_benchmark_dataset_options():
+    """Verify that benchmark CLI command exposes --dataset option."""
+    result = runner.invoke(app, ["benchmark", "--help"])
+    assert result.exit_code == 0
+    assert "--dataset" in result.stdout or "-d" in result.stdout

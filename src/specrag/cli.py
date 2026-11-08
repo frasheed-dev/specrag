@@ -24,6 +24,12 @@ console = Console()
 
 @app.command()
 def benchmark(
+    dataset: str = typer.Option(
+        "local",
+        "--dataset",
+        "-d",
+        help="Benchmark dataset to run: 'local', 't2' (T2-RAGBench), 'ibm' (IBM TechReport), or 'all'",
+    ),
     run_llm: bool = typer.Option(
         False,
         "--run-llm",
@@ -34,8 +40,8 @@ def benchmark(
     """Run the evaluation benchmark comparing Naive vs Production Hybrid RAG."""
     console.print(
         Panel.fit(
-            "[bold cyan]SpecRAG Benchmark Harness[/bold cyan]\n"
-            "Evaluating Naive Fixed-Window vs. Structure-Aware Hybrid + Reranker",
+            "[bold cyan]SpecRAG Multi-Corpus Benchmark Harness[/bold cyan]\n"
+            f"Evaluating Dataset: [bold yellow]{dataset.upper()}[/bold yellow] | Naive Fixed-Window vs. Structure-Aware Hybrid + Reranker",
             border_style="cyan",
         )
     )
@@ -43,35 +49,43 @@ def benchmark(
     from specrag.evaluator import BenchmarkRunner
 
     runner = BenchmarkRunner()
-    results = runner.run_benchmark(run_llm_generation=run_llm)
 
-    naive = results["naive"]
-    hybrid = results["hybrid"]
+    datasets_to_run = ["local", "t2", "ibm"] if dataset.lower() == "all" else [dataset.lower()]
 
-    table = Table(
-        title="SpecRAG Retrieval Benchmark Comparison",
+    summary_table = Table(
+        title="SpecRAG Multi-Benchmark Performance Summary",
         show_header=True,
         header_style="bold magenta",
     )
-    table.add_column("Pipeline Architecture", style="dim", width=40)
-    table.add_column("Hit Rate @ 5 (Recall)", justify="right")
-    table.add_column("MRR", justify="right")
-    table.add_column("Avg Latency", justify="right")
+    summary_table.add_column("Benchmark Suite", style="cyan", width=25)
+    summary_table.add_column("Pipeline Architecture", width=35)
+    summary_table.add_column("Hit Rate @ 5", justify="right")
+    summary_table.add_column("MRR", justify="right")
+    summary_table.add_column("Avg Latency", justify="right")
 
-    table.add_row(
-        "Phase A: Naive Baseline (Fixed 500-char)",
-        f"{naive['hit_rate_at_5'] * 100:.1f}%",
-        f"{naive['mrr']:.3f}",
-        f"{naive['avg_latency_ms']:.1f} ms",
-    )
-    table.add_row(
-        "[bold green]Phase B: Production Hybrid + Rerank[/bold green]",
-        f"[bold green]{hybrid['hit_rate_at_5'] * 100:.1f}%[/bold green]",
-        f"[bold green]{hybrid['mrr']:.3f}[/bold green]",
-        f"{hybrid['avg_latency_ms']:.1f} ms",
-    )
+    for ds in datasets_to_run:
+        console.print(f"\n[cyan]Running benchmark on dataset suite: [bold]{ds.upper()}[/bold]...[/cyan]")
+        results = runner.run_benchmark(dataset=ds, run_llm_generation=run_llm)
+        naive = results["naive"]
+        hybrid = results["hybrid"]
 
-    console.print(table)
+        summary_table.add_row(
+            ds.upper(),
+            "Phase A: Naive Baseline",
+            f"{naive['hit_rate_at_5'] * 100:.1f}%",
+            f"{naive['mrr']:.3f}",
+            f"{naive['avg_latency_ms']:.1f} ms",
+        )
+        summary_table.add_row(
+            ds.upper(),
+            "[bold green]Phase B: Production Hybrid + Rerank[/bold green]",
+            f"[bold green]{hybrid['hit_rate_at_5'] * 100:.1f}%[/bold green]",
+            f"[bold green]{hybrid['mrr']:.3f}[/bold green]",
+            f"{hybrid['avg_latency_ms']:.1f} ms",
+        )
+
+    console.print("\n")
+    console.print(summary_table)
     console.print("\n[bold green]Results updated in BENCHMARK_RESULTS.md[/bold green]\n")
 
 
