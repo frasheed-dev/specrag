@@ -64,7 +64,9 @@ def benchmark(
     summary_table.add_column("Avg Latency", justify="right")
 
     for ds in datasets_to_run:
-        console.print(f"\n[cyan]Running benchmark on dataset suite: [bold]{ds.upper()}[/bold]...[/cyan]")
+        console.print(
+            f"\n[cyan]Running benchmark on dataset suite: [bold]{ds.upper()}[/bold]...[/cyan]"
+        )
         results = runner.run_benchmark(dataset=ds, run_llm_generation=run_llm)
         naive = results["naive"]
         hybrid = results["hybrid"]

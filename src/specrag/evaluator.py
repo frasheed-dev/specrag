@@ -51,9 +51,7 @@ class BenchmarkRunner:
         """Load the 15 golden evaluation items."""
         return json.loads(self.golden_eval_path.read_text(encoding="utf-8"))
 
-    def load_benchmark_data(
-        self, dataset: str = "local"
-    ) -> tuple[dict[str, str], list[dict]]:
+    def load_benchmark_data(self, dataset: str = "local") -> tuple[dict[str, str], list[dict]]:
         """Load document corpus and golden evaluation queries by dataset identifier.
 
         Datasets:
@@ -177,9 +175,7 @@ class BenchmarkRunner:
 
         return hit_at_5, mrr, table_intact
 
-    def run_benchmark(
-        self, dataset: str = "local", run_llm_generation: bool = False
-    ) -> dict:
+    def run_benchmark(self, dataset: str = "local", run_llm_generation: bool = False) -> dict:
         """Run complete benchmark on the selected dataset suite.
 
         Datasets:

@@ -7,9 +7,9 @@ Normalizes diverse third-party public benchmark schemas:
 Converts them into standard SpecRAG DocumentChunk and GoldenEvalItem representations.
 """
 
+import uuid
 from pathlib import Path
 from typing import Any
-import uuid
 
 
 def normalize_benchmark_item(raw_item: dict[str, Any], benchmark_name: str) -> dict[str, Any]:
@@ -61,4 +61,3 @@ def normalize_benchmark_item(raw_item: dict[str, Any], benchmark_name: str) -> d
 
     else:
         raise ValueError(f"Unknown benchmark name: {benchmark_name}")
-

@@ -32,4 +32,3 @@ def test_normalize_ibm_techreport_item():
     assert normalized["ground_truth_answer"] == "800 MHz"
     assert normalized["expected_doc_id"] == "ibm_power10_overview.md"
     assert normalized["expected_section_or_clause"] == "Table 4. Interface Timing Specifications"
-

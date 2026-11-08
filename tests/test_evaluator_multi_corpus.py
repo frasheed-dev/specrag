@@ -40,4 +40,3 @@ def test_load_dataset_by_name():
     docs_ibm, golden_ibm = runner.load_benchmark_data("ibm")
     assert len(golden_ibm) == 20
     assert len(docs_ibm) >= 1
-
