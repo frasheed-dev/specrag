@@ -66,31 +66,59 @@ flowchart LR
 ### Step 2: The Chunking Dilemma (Fixed-Window vs. Structure-Aware)
 
 #### What happens:
-Chunking decides how a 10,000-word document is cut into smaller pieces that fit into an LLM's context window.
+Chunking decides how a document is cut into smaller pieces that fit into an LLM's context window.
 
-```mermaid
-flowchart TD
-    subgraph Naive ["❌ Naive Baseline: Fixed 500-Character Chunker"]
-        N1["... | Specification | NVIDIA H100 NVL | |---|---| | Product SKU | P1010 "] -.->|Arbitrary cut at char 500| N2["SKU 210 | | Base Clock | 1,080 MHz | | Boost Clock | 1,785 MHz | ..."]
-        N1 -.-> F1["Chunk 1 loses rows"]
-        N2 -.-> F2["Chunk 2 loses table column headers!"]
-    end
+##### 1. The Input Document Table
+| Specification | Value | Unit |
+| :--- | :--- | :---: |
+| **GPU Architecture** | Hopper GH100 | — |
+| **Tensor FP8 (Dense)** | 1,979 | TFLOPS |
+| **HBM3 Memory Bandwidth** | 3,900 | GB/s |
+| **Total Board Power (TDP)** | 400 | Watts |
 
-    subgraph Structural ["✅ SpecRAG: Structure-Aware Markdown Chunker"]
-        S1["Table Caption: 'Table 1. Product Specifications'\nBreadcrumb: 'NVIDIA H100 NVL > Specifications'\n\n| Specification | NVIDIA H100 NVL |\n|---|---|\n| Product SKU | P1010 SKU 210 |\n| Base Clock | 1,080 MHz |\n| Total board power | 400 W maximum |"]
-        S1 --> P1["Atomic Chunk: Table is NEVER severed.\nCaption and headers permanently attached."]
-    end
+---
+
+##### 2. What Phase A (Naive 500-Character Chunker) Actually Does
+A naive chunker counts 500 raw characters and blindly cuts right through the middle of the table:
+
+```diff
+[ Chunk 1: Characters 0 – 500 ]
+  # 1. Architecture Overview & Technical Specifications
+  Table 1. NVIDIA H100 NVL Product Specifications
+  | Specification         | Value         | Unit  |
+  | :-------------------- | :------------ | :---: |
+  | GPU Architecture      | Hopper GH100  | —     |
+  | Tensor FP8 (Dense)    | 1,979         | TFLOPS|
+
+============================= [!] ARBITRARY 500-CHAR CUT =============================
+
+[ Chunk 2: Characters 501 – 1000 ]
+- | HBM3 Memory Bandwidth | 3,900         | GB/s  |
+- | Total Board Power TDP | 400           | Watts |
+! FAILURE: Chunk 2 contains isolated rows without column headers or document title!
+! The embedding model cannot know if "400" refers to Watts, Volts, or Clock MHz.
+! Result: Cosine similarity misses this chunk completely on queries like "What is H100 TDP?".
 ```
 
-#### Simple Example:
-Imagine you have a table:
-| Car Model | Top Speed | Price |
-| :--- | :--- | :--- |
-| Ferrari F8 | 340 km/h | \$280,000 |
-| Porsche 911 | 310 km/h | \$120,000 |
+---
 
-- **Naive 500-char Chunker:** Might slice right through the middle. Chunk 2 starts with `310 km/h | $120,000 |`. The LLM has no idea which car that speed belongs to!
-- **Structure-Aware Chunker:** Keeps the entire table intact as one atomic unit, binds the preceding title (`Table 1. Supercar Specs`), and prefixes it with the section path `[Automotive > Sports Cars]`.
+##### 3. What Phase B (SpecRAG Structure-Aware Chunker) Does
+SpecRAG detects table boundaries, keeps the entire matrix intact as an atomic unit, and permanently attaches the preceding caption and hierarchical breadcrumb path:
+
+```diff
+[ SpecRAG Atomic Chunk: 100% Intact ]
++ [Breadcrumb] Architecture Overview > Technical Specifications
++ Table 1. NVIDIA H100 NVL Product Specifications
++ | Specification         | Value         | Unit  |
++ | :-------------------- | :------------ | :---: |
++ | GPU Architecture      | Hopper GH100  | —     |
++ | Tensor FP8 (Dense)    | 1,979         | TFLOPS|
++ | HBM3 Memory Bandwidth | 3,900         | GB/s  |
++ | Total Board Power TDP | 400           | Watts |
++ Metadata: {"doc_id": "nvidia_h100.md", "is_table": true, "row_count": 4}
+! SUCCESS: All rows retain their column headers.
+! Hybrid BM25 + Dense RRF matches exact SKU "P1010" and numerical value "400 W" with 100% precision.
+```
 
 #### Why this method is used:
 Technical specs are relational matrices. If a row is separated from its column header, the numerical data loses all context. Structure-aware chunking ensures that whenever a row is retrieved, its column headers and table caption travel with it.
@@ -267,12 +295,12 @@ classDiagram
 SpecRAG requires **\$0.00** in API bills. The built-in `llm_factory.py` implements an automated fallback cascade across free tiers:
 
 ```mermaid
-flowchart LR
+flowchart TD
     Start["User Query"] --> P1["1. Groq\n(llama-3.3-70b-versatile)"]
     P1 -->|HTTP 429 Rate Limit| P2["2. NVIDIA NIM\n(meta/llama-3.3-70b-instruct)"]
     P2 -->|HTTP 429 Rate Limit| P3["3. OpenRouter\n(:free tier)"]
     P3 -->|HTTP 429 Rate Limit| P4["4. GitHub Models\n(gpt-4o-mini)"]
-    P4 -->|No Connection| P5["5. Local Ollama\n(offline fallback)"]
+    P4 -->|Offline Fallback| P5["5. Local Ollama\n(offline fallback)"]
 ```
 
 ---
