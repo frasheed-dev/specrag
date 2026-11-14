@@ -308,14 +308,15 @@ flowchart TD
 
 ## 📊 Empirical Benchmark Results
 
-Evaluated across **Official Third-Party Hugging Face Benchmarks** (`G4KMU/t2-ragbench` and `ibm-research/REAL-MM-RAG_TechReport`) on **NVIDIA T4 GPU**:
+Evaluated across **4 Official Third-Party Hugging Face Benchmarks** streaming live on **NVIDIA Tesla T4 GPU (Google Colab)** with strict ground-truth answer containment:
 
-| Benchmark Suite | Domain & Corpus | Phase A: Naive Recall@5 | Phase B: Hybrid Recall@5 | Phase A MRR | Phase B MRR (Reranked) | GPU Latency (T4) |
+| Benchmark Suite | Domain & Corpus Scale | Phase A: Naive Recall@5 | Phase B: Hybrid Recall@5 | Phase A MRR | Phase B MRR (Reranked) | GPU Latency (T4) |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: |
-| **1. T²-RAGBench (`G4KMU/t2-ragbench`)** | Financial & Enterprise Tables | 100.0% | **100.0%** | 0.875 | **1.000** 🏆 | 291.8 ms |
-| **2. IBM TechReport (`ibm-research`)** | Microarchitectures & Interconnects | 100.0% | **100.0%** | 0.729 | **0.871** | 288.0 ms |
-| **3. Live HF Stream (`47 docs / 228 chunks`)** | **Full Multi-Doc SEC Filings** | 100.0% | **100.0%** | 0.990 | **1.000** 🏆 | 607.6 ms |
-| **Overall Benchmark Average** | **Cross-Domain Enterprise Specs** | **100.0%** | **100.0%** | **0.802** | **0.936** (+0.134) | **289.9 ms** |
+| **1. T²-RAGBench (`FinQA`)** | SEC Financial Tables (228 chunks) | 96.0% | **100.0%** | 0.800 | **1.000** 🏆 | 578.5 ms |
+| **2. TAT-DQA (`TAT-QA`)** | Multi-Row Financial Grids (61 chunks) | 96.0% | **100.0%** | 0.786 | **1.000** 🏆 | 553.9 ms |
+| **3. IBM TechReport (`ibm-research`)** | Microarchitectures & Buses (52 chunks) | 80.0% | **82.0%** | 0.638 | **0.769** | 316.4 ms |
+| **4. TechQA (`galileo-ai/ragbench`)** | **Enterprise Specs (734 chunks)** | **22.0%** | **94.0%** 🚀 (+72.0%) | **0.152** | **0.803** 🚀 (+0.651) | 721.9 ms |
+| **Multi-Corpus Benchmark Average** | **Cross-Domain Enterprise Specs** | **73.5%** | **94.0%** (+20.5%) | **0.594** | **0.893** (+0.299) | **542.7 ms** |
 
 > Full evaluation breakdown available in [`BENCHMARK_RESULTS.md`](BENCHMARK_RESULTS.md).
 >
