@@ -169,7 +169,75 @@ def load_live_hf_benchmark(
         logger.info(f"Loaded {len(docs)} documents and {len(queries)} queries from IBM TechReport.")
         return docs, queries
 
+    elif d in ("tatqa", "tat_dqa", "tat-dqa"):
+        logger.info(f"Loading live G4KMU/t2-ragbench (TAT-DQA split={split}, limit={limit})...")
+        ds = load_dataset("G4KMU/t2-ragbench", "TAT-DQA", split=split, token=token)
+        if limit and limit < len(ds):
+            ds = ds.select(range(limit))
+
+        docs = {}
+        queries = []
+        for i, item in enumerate(ds):
+            file_name = item.get("file_name", f"doc_{i}")
+            clean_doc_id = Path(file_name).name if "raw/" in file_name else f"{file_name}.md"
+            if not clean_doc_id.endswith(".md"):
+                clean_doc_id = f"{clean_doc_id}.md"
+
+            company = item.get("company_name", f"Company_{i}")
+            year = item.get("report_year", "")
+            raw_context = item.get("context", "")
+            content = f"# {company} Financial Analysis ({year})\n\n{raw_context}"
+
+            docs[clean_doc_id] = content
+            raw_ans = str(item.get("original_answer", "")).strip("[]'\"")
+            queries.append(
+                {
+                    "query_id": str(item.get("id", f"tatqa_{i}")),
+                    "domain": "finance_complex_tables",
+                    "query": item.get("question", ""),
+                    "ground_truth_answer": raw_ans,
+                    "expected_doc_id": clean_doc_id,
+                    "expected_section_or_clause": company,
+                    "query_type": "table_lookup",
+                }
+            )
+
+        logger.info(f"Loaded {len(docs)} documents and {len(queries)} queries from TAT-DQA.")
+        return docs, queries
+
+    elif d in ("techqa", "ragbench_techqa"):
+        logger.info(f"Loading live galileo-ai/ragbench (techqa split={split}, limit={limit})...")
+        ds = load_dataset("galileo-ai/ragbench", "techqa", split=split, token=token)
+        if limit and limit < len(ds):
+            ds = ds.select(range(limit))
+
+        docs = {}
+        queries = []
+        for i, item in enumerate(ds):
+            raw_id = item.get("id", f"techqa_{i}")
+            clean_doc_id = f"{raw_id}.md"
+            raw_docs = item.get("documents", [])
+            doc_body = "\n\n".join(raw_docs) if isinstance(raw_docs, list) else str(raw_docs)
+            content = f"# Enterprise Technical Spec: {raw_id}\n\n{doc_body}"
+
+            docs[clean_doc_id] = content
+            answer = item.get("response", "")
+            queries.append(
+                {
+                    "query_id": raw_id,
+                    "domain": "enterprise_tech_specs",
+                    "query": item.get("question", ""),
+                    "ground_truth_answer": str(answer)[:150],
+                    "expected_doc_id": clean_doc_id,
+                    "expected_section_or_clause": raw_id,
+                    "query_type": "technical_troubleshooting",
+                }
+            )
+
+        logger.info(f"Loaded {len(docs)} documents and {len(queries)} queries from TechQA.")
+        return docs, queries
+
     else:
         raise ValueError(
-            f"Unknown live benchmark dataset: '{dataset_name}'. Supported: 't2', 'ibm'"
+            f"Unknown live benchmark dataset: '{dataset_name}'. Supported: 't2', 'ibm', 'tatqa', 'techqa'"
         )

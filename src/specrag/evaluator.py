@@ -148,8 +148,13 @@ class BenchmarkRunner:
         retrieved_chunks: list[DocumentChunk],
         expected_doc_id: str,
         expected_section: str,
+        ground_truth_answer: str = "",
     ) -> tuple[bool, float, bool]:
         """Check Hit@5, MRR, and whether full table was preserved.
+
+        A chunk is counted as an evidence hit if it is from the expected document AND
+        contains the verified ground-truth answer or target specification section/table.
+        This prevents empty preamble/disclaimer chunks from falsely inflating scores.
 
         Returns:
             tuple[hit_at_5, mrr, table_intact]
@@ -158,13 +163,25 @@ class BenchmarkRunner:
         mrr = 0.0
         table_intact = False
 
+        ans_clean = str(ground_truth_answer).strip().strip("[]'\"").lower()
+
         for rank, chunk in enumerate(retrieved_chunks[:5], start=1):
             doc_match = expected_doc_id.lower() in chunk.doc_id.lower()
-            section_match = expected_section.lower() in chunk.text.lower() or any(
-                expected_section.lower() in b.lower() for b in chunk.section_breadcrumbs
+
+            ans_match = (
+                (ans_clean in chunk.text.lower())
+                if (ans_clean and len(ans_clean) >= 2)
+                else False
             )
 
-            if doc_match or section_match:
+            section_match = (
+                expected_section.lower() in chunk.text.lower()
+                or any(expected_section.lower() in b.lower() for b in chunk.section_breadcrumbs)
+            ) if expected_section else False
+
+            is_evidence_hit = doc_match and (ans_match or section_match or chunk.is_table)
+
+            if is_evidence_hit:
                 if not hit_at_5:
                     hit_at_5 = True
                     mrr = 1.0 / rank
@@ -223,13 +240,16 @@ class BenchmarkRunner:
                 exp_doc = item["expected_doc_id"]
                 exp_sec = item["expected_section_or_clause"]
                 qtype = item["query_type"]
+                gt_ans = item.get("ground_truth_answer", "")
 
                 # 1. Run Naive Pipeline
                 t0 = time.perf_counter()
                 naive_hits = naive_retriever.retrieve(query, top_k=5)
                 t_naive = (time.perf_counter() - t0) * 1000.0
                 naive_chunks_ret = [c for c, _ in naive_hits]
-                naive_hit, naive_mrr, _ = self.evaluate_retrieval(naive_chunks_ret, exp_doc, exp_sec)
+                naive_hit, naive_mrr, _ = self.evaluate_retrieval(
+                    naive_chunks_ret, exp_doc, exp_sec, gt_ans
+                )
 
                 results["naive"]["hits"] += 1 if naive_hit else 0
                 results["naive"]["mrr_sum"] += naive_mrr
@@ -251,7 +271,7 @@ class BenchmarkRunner:
                 t_hybrid = (time.perf_counter() - t0) * 1000.0
                 hybrid_chunks_ret = [c for c, _ in reranked_hits]
                 hybrid_hit, hybrid_mrr, table_intact = self.evaluate_retrieval(
-                    hybrid_chunks_ret, exp_doc, exp_sec
+                    hybrid_chunks_ret, exp_doc, exp_sec, gt_ans
                 )
 
                 results["hybrid"]["hits"] += 1 if hybrid_hit else 0
@@ -333,13 +353,16 @@ class BenchmarkRunner:
         for s in summaries:
             ds_name = s.get("dataset", "Benchmark").upper()
             src = "Hugging Face Live" if s.get("source") == "hf" else "Verified Corpus"
-            label = (
-                f"T²-RAGBench ({src})"
-                if ds_name in ("T2", "T2_RAGBENCH")
-                else f"IBM TechReport ({src})"
-                if ds_name in ("IBM", "IBM_TECHREPORT")
-                else f"{ds_name} ({src})"
-            )
+            if ds_name in ("T2", "T2_RAGBENCH"):
+                label = f"T²-RAGBench ({src})"
+            elif ds_name in ("TATQA", "TAT_DQA", "TAT-DQA"):
+                label = f"TAT-DQA ({src})"
+            elif ds_name in ("IBM", "IBM_TECHREPORT"):
+                label = f"IBM TechReport ({src})"
+            elif ds_name in ("TECHQA", "RAGBENCH_TECHQA"):
+                label = f"TechQA ({src})"
+            else:
+                label = f"{ds_name} ({src})"
             naive = s["naive"]
             hybrid = s["hybrid"]
 

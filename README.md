@@ -391,8 +391,11 @@ python -m specrag.cli query "What is the peak memory bandwidth of the H100 NVL?"
 # 3. Query with Naive baseline to observe table-severing failure
 python -m specrag.cli query "What is the peak memory bandwidth of the H100 NVL?" --mode naive
 
-# 4. Run the complete 15-query comparative benchmark
-python -m specrag.cli benchmark
+# 4. Run public benchmark suites
+python -m specrag.cli benchmark --dataset all --source local            # Fast offline pack (~10s)
+python -m specrag.cli benchmark --dataset all --source hf --limit 50    # Live streaming multi-corpus from Hugging Face
+python -m specrag.cli benchmark --dataset tatqa --source hf --limit 50  # Complex multi-row financial tables (TAT-DQA)
+python -m specrag.cli benchmark --dataset techqa --source hf --limit 50 # Enterprise technical specifications (TechQA)
 ```
 
 ### 4. Running Tests

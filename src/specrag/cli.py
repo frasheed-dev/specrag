@@ -63,7 +63,12 @@ def benchmark(
 
     runner = BenchmarkRunner()
 
-    datasets_to_run = ["t2", "ibm"] if dataset.lower() == "all" else [dataset.lower()]
+    if dataset.lower() == "all":
+        datasets_to_run = (
+            ["t2", "tatqa", "ibm", "techqa"] if source.lower() == "hf" else ["t2", "ibm"]
+        )
+    else:
+        datasets_to_run = [dataset.lower()]
 
     summary_table = Table(
         title="SpecRAG Multi-Benchmark Performance Summary",
@@ -90,13 +95,16 @@ def benchmark(
         hybrid = results["hybrid"]
 
         src_label = "HF Live" if source.lower() == "hf" else "Verified"
-        label = (
-            f"T²-RAGBench ({src_label})"
-            if ds in ("t2", "t2_ragbench")
-            else f"IBM TechReport ({src_label})"
-            if ds in ("ibm", "ibm_techreport")
-            else ds.upper()
-        )
+        if ds in ("t2", "t2_ragbench"):
+            label = f"T²-RAGBench ({src_label})"
+        elif ds in ("tatqa", "tat_dqa", "tat-dqa"):
+            label = f"TAT-DQA ({src_label})"
+        elif ds in ("ibm", "ibm_techreport"):
+            label = f"IBM TechReport ({src_label})"
+        elif ds in ("techqa", "ragbench_techqa"):
+            label = f"TechQA ({src_label})"
+        else:
+            label = f"{ds.upper()} ({src_label})"
         scale_label = f"{results.get('total_documents', '-')} docs / {results.get('total_chunks', '-')} chunks"
 
         summary_table.add_row(
