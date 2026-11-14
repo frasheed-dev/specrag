@@ -25,10 +25,22 @@ console = Console()
 @app.command()
 def benchmark(
     dataset: str = typer.Option(
-        "local",
+        "all",
         "--dataset",
         "-d",
-        help="Benchmark dataset to run: 'local', 't2' (T2-RAGBench), 'ibm' (IBM TechReport), or 'all'",
+        help="Benchmark dataset to run: 't2' (T2-RAGBench), 'ibm' (IBM TechReport), or 'all'",
+    ),
+    source: str = typer.Option(
+        "local",
+        "--source",
+        "-s",
+        help="Benchmark data source: 'local' (fast offline packs) or 'hf' (live Hugging Face Hub stream)",
+    ),
+    limit: int | None = typer.Option(
+        None,
+        "--limit",
+        "-n",
+        help="Maximum items to stream when source='hf' (default: 50, None for full)",
     ),
     run_llm: bool = typer.Option(
         False,
@@ -41,7 +53,8 @@ def benchmark(
     console.print(
         Panel.fit(
             "[bold cyan]SpecRAG Multi-Corpus Benchmark Harness[/bold cyan]\n"
-            f"Evaluating Dataset: [bold yellow]{dataset.upper()}[/bold yellow] | Naive Fixed-Window vs. Structure-Aware Hybrid + Reranker",
+            f"Evaluating Dataset: [bold yellow]{dataset.upper()}[/bold yellow] | Source: [bold green]{source.upper()}[/bold green]\n"
+            "Naive Fixed-Window vs. Structure-Aware Hybrid + Reranker",
             border_style="cyan",
         )
     )
@@ -59,6 +72,7 @@ def benchmark(
     )
     summary_table.add_column("Benchmark Suite", style="cyan", width=25)
     summary_table.add_column("Pipeline Architecture", width=35)
+    summary_table.add_column("Scale", justify="center", width=20)
     summary_table.add_column("Hit Rate @ 5", justify="right")
     summary_table.add_column("MRR", justify="right")
     summary_table.add_column("Avg Latency", justify="right")
@@ -66,24 +80,29 @@ def benchmark(
     all_summaries = []
     for ds in datasets_to_run:
         console.print(
-            f"\n[cyan]Running benchmark on public dataset suite: [bold]{ds.upper()}[/bold]...[/cyan]"
+            f"\n[cyan]Running benchmark on dataset suite: [bold]{ds.upper()}[/bold] (Source: {source.upper()})...[/cyan]"
         )
-        results = runner.run_benchmark(dataset=ds, run_llm_generation=run_llm)
+        results = runner.run_benchmark(
+            dataset=ds, source=source, limit=limit, run_llm_generation=run_llm
+        )
         all_summaries.append(results)
         naive = results["naive"]
         hybrid = results["hybrid"]
 
+        src_label = "HF Live" if source.lower() == "hf" else "Verified"
         label = (
-            "T²-RAGBench (Financial Tables)"
+            f"T²-RAGBench ({src_label})"
             if ds in ("t2", "t2_ragbench")
-            else "IBM TechReport (Microarchitectures)"
+            else f"IBM TechReport ({src_label})"
             if ds in ("ibm", "ibm_techreport")
             else ds.upper()
         )
+        scale_label = f"{results.get('total_documents', '-')} docs / {results.get('total_chunks', '-')} chunks"
 
         summary_table.add_row(
             label,
             "Phase A: Naive Baseline",
+            scale_label,
             f"{naive['hit_rate_at_5'] * 100:.1f}%",
             f"{naive['mrr']:.3f}",
             f"{naive['avg_latency_ms']:.1f} ms",
@@ -91,6 +110,7 @@ def benchmark(
         summary_table.add_row(
             label,
             "[bold green]Phase B: Production Hybrid + Rerank[/bold green]",
+            scale_label,
             f"[bold green]{hybrid['hit_rate_at_5'] * 100:.1f}%[/bold green]",
             f"[bold green]{hybrid['mrr']:.3f}[/bold green]",
             f"{hybrid['avg_latency_ms']:.1f} ms",

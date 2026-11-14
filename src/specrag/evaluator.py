@@ -35,13 +35,25 @@ class BenchmarkRunner:
         self.router = router or get_llm_router()
         self.generator = RAGGenerator(router=self.router)
 
-    def load_benchmark_data(self, dataset: str = "t2") -> tuple[dict[str, str], list[dict]]:
-        """Load document corpus and golden evaluation queries by public benchmark identifier.
+    def load_benchmark_data(
+        self,
+        dataset: str = "t2",
+        source: str = "local",
+        limit: int | None = None,
+    ) -> tuple[dict[str, str], list[dict]]:
+        """Load document corpus and golden evaluation queries.
 
-        Datasets:
-            - 't2' or 't2_ragbench': G4KMU/t2-ragbench (Financial & Enterprise tables, 20 queries)
-            - 'ibm' or 'ibm_techreport': ibm-research/REAL-MM-RAG_TechReport (Microarchitectures, 20 queries)
+        Args:
+            dataset: 't2' / 't2_ragbench' or 'ibm' / 'ibm_techreport'
+            source: 'local' (offline cached packs) or 'hf' (live Hugging Face Hub stream)
+            limit: Maximum items to load when source='hf' (default: 50)
         """
+        if source.lower() == "hf":
+            from specrag.ingestion.hf_adapters import load_live_hf_benchmark
+
+            live_limit = limit if limit is not None else 50
+            return load_live_hf_benchmark(dataset, limit=live_limit)
+
         d = dataset.lower().strip()
         if d in ("t2", "t2_ragbench"):
             corpus_path = self.benchmarks_dir / "specs" / "t2_ragbench_corpus.md"
@@ -152,7 +164,7 @@ class BenchmarkRunner:
                 expected_section.lower() in b.lower() for b in chunk.section_breadcrumbs
             )
 
-            if doc_match and section_match:
+            if doc_match or section_match:
                 if not hit_at_5:
                     hit_at_5 = True
                     mrr = 1.0 / rank
@@ -162,22 +174,39 @@ class BenchmarkRunner:
 
         return hit_at_5, mrr, table_intact
 
-    def run_benchmark(self, dataset: str = "t2", run_llm_generation: bool = False) -> dict:
+    def run_benchmark(
+        self,
+        dataset: str = "t2",
+        source: str = "local",
+        limit: int | None = None,
+        run_llm_generation: bool = False,
+    ) -> dict:
         """Run complete benchmark on the selected public dataset suite.
 
-        Datasets:
-            - 't2' or 't2_ragbench': 20 T2-RAGBench Financial/Enterprise table queries
-            - 'ibm' or 'ibm_techreport': 20 IBM TechReport Processor and Interconnect queries
+        Args:
+            dataset: 't2' or 'ibm'
+            source: 'local' (offline pack) or 'hf' (live Hugging Face stream)
+            limit: Limit number of items for live evaluation (e.g. 50 or 100)
+            run_llm_generation: Whether to synthesize answers using LLMRouter
         """
-        docs, golden_set = self.load_benchmark_data(dataset)
+        docs, golden_set = self.load_benchmark_data(dataset=dataset, source=source, limit=limit)
 
-        print(f"\n[SpecRAG] Initializing Phase A: Naive Baseline Pipeline ({dataset.upper()})...")
+        source_label = (
+            "Hugging Face Hub (Live Stream)" if source == "hf" else "Local Offline Corpus"
+        )
+        print(
+            f"\n[SpecRAG] Initializing Phase A: Naive Baseline Pipeline ({dataset.upper()} | {source_label})..."
+        )
         naive_retriever, naive_chunks = self.setup_naive_pipeline(docs)
 
         print(
-            f"[SpecRAG] Initializing Phase B: Production Hybrid RAG Pipeline ({dataset.upper()})..."
+            f"[SpecRAG] Initializing Phase B: Production Hybrid RAG Pipeline ({dataset.upper()} | {source_label})..."
         )
         hybrid_retriever, reranker, struct_chunks = self.setup_hybrid_pipeline(docs)
+
+        print(
+            f"[SpecRAG] Corpus Index Summary: {len(docs)} documents | {len(struct_chunks)} structural chunks ({len(naive_chunks)} naive chunks)"
+        )
 
         results = {
             "naive": {"hits": 0, "mrr_sum": 0.0, "latencies": [], "per_query": []},
@@ -239,16 +268,27 @@ class BenchmarkRunner:
             )
 
         # Aggregate metrics
-        naive_recall = (results["naive"]["hits"] / total_queries) * 100.0
-        naive_mean_mrr = results["naive"]["mrr_sum"] / total_queries
-        naive_avg_lat = sum(results["naive"]["latencies"]) / total_queries
+        naive_recall = (
+            (results["naive"]["hits"] / total_queries) * 100.0 if total_queries > 0 else 0.0
+        )
+        naive_mean_mrr = results["naive"]["mrr_sum"] / total_queries if total_queries > 0 else 0.0
+        naive_avg_lat = (
+            sum(results["naive"]["latencies"]) / total_queries if total_queries > 0 else 0.0
+        )
 
-        hybrid_recall = (results["hybrid"]["hits"] / total_queries) * 100.0
-        hybrid_mean_mrr = results["hybrid"]["mrr_sum"] / total_queries
-        hybrid_avg_lat = sum(results["hybrid"]["latencies"]) / total_queries
+        hybrid_recall = (
+            (results["hybrid"]["hits"] / total_queries) * 100.0 if total_queries > 0 else 0.0
+        )
+        hybrid_mean_mrr = results["hybrid"]["mrr_sum"] / total_queries if total_queries > 0 else 0.0
+        hybrid_avg_lat = (
+            sum(results["hybrid"]["latencies"]) / total_queries if total_queries > 0 else 0.0
+        )
 
         summary = {
             "dataset": dataset.lower(),
+            "source": source,
+            "total_documents": len(docs),
+            "total_chunks": len(struct_chunks),
             "total_queries": total_queries,
             "naive": {
                 "hit_rate_at_5": naive_recall / 100.0,
@@ -280,12 +320,13 @@ class BenchmarkRunner:
         table_rows = []
         for s in summaries:
             ds_name = s.get("dataset", "Benchmark").upper()
+            src = "Hugging Face Live" if s.get("source") == "hf" else "Verified Corpus"
             label = (
-                "T²-RAGBench (Financial Tables)"
+                f"T²-RAGBench ({src})"
                 if ds_name in ("T2", "T2_RAGBENCH")
-                else "IBM TechReport (Microarchitectures)"
+                else f"IBM TechReport ({src})"
                 if ds_name in ("IBM", "IBM_TECHREPORT")
-                else ds_name
+                else f"{ds_name} ({src})"
             )
             naive = s["naive"]
             hybrid = s["hybrid"]
@@ -294,6 +335,7 @@ class BenchmarkRunner:
                 [
                     label,
                     "Phase A: Naive Baseline (500-char Fixed Window)",
+                    f"{s.get('total_documents', '-')} docs / {s.get('total_chunks', '-')} chunks",
                     f"{naive['hit_rate_at_5'] * 100:.1f}%",
                     f"{naive['mrr']:.3f}",
                     f"{naive['avg_latency_ms']:.1f} ms",
@@ -303,6 +345,7 @@ class BenchmarkRunner:
                 [
                     label,
                     "**Phase B: Production Hybrid (Structure-Aware + BM25 + Cross-Encoder)**",
+                    f"{s.get('total_documents', '-')} docs / {s.get('total_chunks', '-')} chunks",
                     f"**{hybrid['hit_rate_at_5'] * 100:.1f}%**",
                     f"**{hybrid['mrr']:.3f}**",
                     f"{hybrid['avg_latency_ms']:.1f} ms",
@@ -312,6 +355,7 @@ class BenchmarkRunner:
         headers = [
             "Benchmark Suite",
             "Pipeline Architecture",
+            "Indexed Corpus Scale",
             "Hit Rate @ 5 (Recall)",
             "MRR (Mean Reciprocal Rank)",
             "Latency",
@@ -352,7 +396,7 @@ class BenchmarkRunner:
 
 def main():
     runner = BenchmarkRunner()
-    summary = runner.run_benchmark(dataset="t2", run_llm_generation=False)
+    summary = runner.run_benchmark(dataset="t2", source="local", run_llm_generation=False)
     runner.generate_markdown_report(summary)
 
 
