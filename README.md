@@ -314,6 +314,7 @@ Evaluated across **Official Third-Party Hugging Face Benchmarks** (`G4KMU/t2-rag
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: |
 | **1. T²-RAGBench (`G4KMU/t2-ragbench`)** | Financial & Enterprise Tables | 100.0% | **100.0%** | 0.875 | **1.000** 🏆 | 291.8 ms |
 | **2. IBM TechReport (`ibm-research`)** | Microarchitectures & Interconnects | 100.0% | **100.0%** | 0.729 | **0.871** | 288.0 ms |
+| **3. Live HF Stream (`47 docs / 228 chunks`)** | **Full Multi-Doc SEC Filings** | 100.0% | **100.0%** | 0.990 | **1.000** 🏆 | 607.6 ms |
 | **Overall Benchmark Average** | **Cross-Domain Enterprise Specs** | **100.0%** | **100.0%** | **0.802** | **0.936** (+0.134) | **289.9 ms** |
 
 > Full evaluation breakdown available in [`BENCHMARK_RESULTS.md`](BENCHMARK_RESULTS.md).

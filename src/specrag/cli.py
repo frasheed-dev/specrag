@@ -70,12 +70,12 @@ def benchmark(
         show_header=True,
         header_style="bold magenta",
     )
-    summary_table.add_column("Benchmark Suite", style="cyan", width=25)
-    summary_table.add_column("Pipeline Architecture", width=35)
-    summary_table.add_column("Scale", justify="center", width=20)
-    summary_table.add_column("Hit Rate @ 5", justify="right")
+    summary_table.add_column("Benchmark", style="cyan", no_wrap=True)
+    summary_table.add_column("Pipeline")
+    summary_table.add_column("Corpus Scale", justify="center")
+    summary_table.add_column("Recall@5", justify="right")
     summary_table.add_column("MRR", justify="right")
-    summary_table.add_column("Avg Latency", justify="right")
+    summary_table.add_column("Latency", justify="right")
 
     all_summaries = []
     for ds in datasets_to_run:
@@ -199,82 +199,92 @@ def query(
         f"[bold cyan]Query:[/bold cyan] {query_text} [dim](Mode: {mode}, Top-K: {top_k})[/dim]"
     )
 
-    if mode == "naive":
-        from specrag.chunkers import FixedWindowChunker
-        from specrag.retriever import QdrantDenseRetriever
+    dense_to_close = None
+    try:
+        if mode == "naive":
+            from specrag.chunkers import FixedWindowChunker
+            from specrag.retriever import QdrantDenseRetriever
 
-        chunker = FixedWindowChunker(chunk_size=500, chunk_overlap=50)
-        all_chunks = []
-        for doc_id, text in documents.items():
-            all_chunks.extend(chunker.chunk_document(text, doc_id))
-        retriever = QdrantDenseRetriever(collection_name="cli_naive", recreate_collection=True)
-        retriever.index_chunks(all_chunks)
-        hits = retriever.retrieve(query_text, top_k=top_k)
-        retrieved_chunks = [c for c, _ in hits]
-    else:
-        from specrag.chunkers import StructureAwareMarkdownChunker
-        from specrag.retriever import (
-            BM25SparseRetriever,
-            CrossEncoderReranker,
-            HybridRRFRetriever,
-            QdrantDenseRetriever,
-        )
-
-        chunker = StructureAwareMarkdownChunker(max_prose_chunk_size=1000)
-        all_chunks = []
-        for doc_id, text in documents.items():
-            all_chunks.extend(chunker.chunk_document(text, doc_id))
-
-        dense = QdrantDenseRetriever(collection_name="cli_hybrid", recreate_collection=True)
-        dense.index_chunks(all_chunks)
-
-        sparse = BM25SparseRetriever()
-        sparse.index_chunks(all_chunks)
-
-        hybrid = HybridRRFRetriever(dense_retriever=dense, sparse_retriever=sparse)
-
-        if mode == "hybrid_rerank":
-            candidates = hybrid.retrieve(query_text, top_k=max(20, top_k * 3))
-            reranker = CrossEncoderReranker()
-            reranked = reranker.rerank(query_text, [c for c, _ in candidates], top_k=top_k)
-            retrieved_chunks = [c for c, _ in reranked]
-        else:
-            hits = hybrid.retrieve(query_text, top_k=top_k)
+            chunker = FixedWindowChunker(chunk_size=500, chunk_overlap=50)
+            all_chunks = []
+            for doc_id, text in documents.items():
+                all_chunks.extend(chunker.chunk_document(text, doc_id))
+            retriever = QdrantDenseRetriever(collection_name="cli_naive", recreate_collection=True)
+            dense_to_close = retriever
+            retriever.index_chunks(all_chunks)
+            hits = retriever.retrieve(query_text, top_k=top_k)
             retrieved_chunks = [c for c, _ in hits]
-
-    # Display retrieved chunks
-    for i, c in enumerate(retrieved_chunks, start=1):
-        table_flag = "[bold red][TABLE][/bold red]" if c.is_table else "[blue][PROSE][/blue]"
-        prefix = f" | {c.breadcrumb_prefix}" if c.breadcrumb_prefix else ""
-        console.print(
-            Panel(
-                f"[bold yellow]Chunk #{i}[/bold yellow] {table_flag} [dim]{c.doc_id}{prefix}[/dim]\n\n"
-                f"{c.text[:400]}..."
-                if len(c.text) > 400
-                else c.text,
-                title=f"Result {i} (ID: {c.chunk_id})",
-                border_style="blue",
+        else:
+            from specrag.chunkers import StructureAwareMarkdownChunker
+            from specrag.retriever import (
+                BM25SparseRetriever,
+                CrossEncoderReranker,
+                HybridRRFRetriever,
+                QdrantDenseRetriever,
             )
-        )
 
-    if generate:
-        console.print("\n[cyan]Synthesizing structured answer with LLM...[/cyan]")
-        try:
-            from specrag.generator import SpecAnswerGenerator
+            chunker = StructureAwareMarkdownChunker(max_prose_chunk_size=1000)
+            all_chunks = []
+            for doc_id, text in documents.items():
+                all_chunks.extend(chunker.chunk_document(text, doc_id))
 
-            gen = SpecAnswerGenerator()
-            response = gen.generate(query_text, retrieved_chunks)
+            dense = QdrantDenseRetriever(collection_name="cli_hybrid", recreate_collection=True)
+            dense_to_close = dense
+            dense.index_chunks(all_chunks)
+
+            sparse = BM25SparseRetriever()
+            sparse.index_chunks(all_chunks)
+
+            hybrid = HybridRRFRetriever(dense_retriever=dense, sparse_retriever=sparse)
+
+            if mode == "hybrid_rerank":
+                candidates = hybrid.retrieve(query_text, top_k=max(20, top_k * 3))
+                reranker = CrossEncoderReranker()
+                reranked = reranker.rerank(query_text, [c for c, _ in candidates], top_k=top_k)
+                retrieved_chunks = [c for c, _ in reranked]
+            else:
+                hits = hybrid.retrieve(query_text, top_k=top_k)
+                retrieved_chunks = [c for c, _ in hits]
+
+        # Display retrieved chunks
+        for i, c in enumerate(retrieved_chunks, start=1):
+            table_flag = "[bold red][TABLE][/bold red]" if c.is_table else "[blue][PROSE][/blue]"
+            prefix = f" | {c.breadcrumb_prefix}" if c.breadcrumb_prefix else ""
             console.print(
-                Panel.fit(
-                    f"[bold green]Answer:[/bold green]\n{response.answer}\n\n"
-                    f"[dim]Confidence: {response.confidence_score:.2f} | Reasoning: {response.reasoning}[/dim]\n"
-                    f"[bold cyan]Citations:[/bold cyan] {', '.join(str(c) for c in response.citations)}",
-                    title="SpecRAG Synthesized Answer",
-                    border_style="green",
+                Panel(
+                    f"[bold yellow]Chunk #{i}[/bold yellow] {table_flag} [dim]{c.doc_id}{prefix}[/dim]\n\n"
+                    f"{c.text[:400]}..."
+                    if len(c.text) > 400
+                    else c.text,
+                    title=f"Result {i} (ID: {c.chunk_id})",
+                    border_style="blue",
                 )
             )
-        except Exception as e:
-            console.print(f"[bold red]LLM Generation failed or no API key set:[/bold red] {e}")
+
+        if generate:
+            console.print("\n[cyan]Synthesizing structured answer with LLM...[/cyan]")
+            try:
+                from specrag.generator import SpecAnswerGenerator
+
+                gen = SpecAnswerGenerator()
+                response = gen.generate(query_text, retrieved_chunks)
+                console.print(
+                    Panel.fit(
+                        f"[bold green]Answer:[/bold green]\n{response.answer}\n\n"
+                        f"[dim]Confidence: {response.confidence_score:.2f} | Reasoning: {response.reasoning}[/dim]\n"
+                        f"[bold cyan]Citations:[/bold cyan] {', '.join(str(c) for c in response.citations)}",
+                        title="SpecRAG Synthesized Answer",
+                        border_style="green",
+                    )
+                )
+            except Exception as e:
+                console.print(f"[bold red]LLM Generation failed or no API key set:[/bold red] {e}")
+    finally:
+        if dense_to_close is not None:
+            try:
+                dense_to_close.close()
+            except Exception:
+                pass
 
 
 if __name__ == "__main__":

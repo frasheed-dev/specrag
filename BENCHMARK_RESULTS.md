@@ -7,11 +7,19 @@
 
 ## 1. Executive Summary: Naive vs. Production Hybrid RAG
 
+### A. Verified Multi-Corpus Evaluation (Offline Golden Pack)
+
 | Benchmark Suite | Domain & Corpus Type | Phase A: Naive Recall@5 | Phase B: Hybrid Recall@5 | Phase A MRR | Phase B MRR (Reranked) | Average Latency (T4 GPU) |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: |
 | **1. T²-RAGBench (`G4KMU/t2-ragbench`)** | Financial & Enterprise Tables | 100.0% | **100.0%** | 0.875 | **1.000** 🏆 | 291.8 ms |
 | **2. IBM TechReport (`ibm-research`)** | Microarchitectures & Interconnects | 100.0% | **100.0%** | 0.729 | **0.871** | 288.0 ms |
 | **Overall Benchmark Average** | **Cross-Domain Enterprise Specs** | **100.0%** | **100.0%** | **0.802** | **0.936** (+0.134) | **289.9 ms** |
+
+### B. Scaled Multi-Document Evaluation (Live Hugging Face Hub Stream)
+
+| Benchmark Suite | Corpus Scale (Live Streamed) | Phase A: Naive Recall@5 | Phase B: Hybrid Recall@5 | Phase A MRR | Phase B MRR (Reranked) | Average Latency (T4 GPU) |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| **T²-RAGBench Live (`FinQA`)** | **47 docs / 228 chunks** | 100.0% | **100.0%** | 0.990 | **1.000** 🏆 | 607.6 ms |
 
 ---
 

@@ -216,56 +216,68 @@ class BenchmarkRunner:
         total_queries = len(golden_set)
         print(f"[SpecRAG] Evaluating {total_queries} Golden Queries on {dataset.upper()}...")
 
-        for item in golden_set:
-            qid = item["query_id"]
-            query = item["query"]
-            exp_doc = item["expected_doc_id"]
-            exp_sec = item["expected_section_or_clause"]
-            qtype = item["query_type"]
+        try:
+            for item in golden_set:
+                qid = item["query_id"]
+                query = item["query"]
+                exp_doc = item["expected_doc_id"]
+                exp_sec = item["expected_section_or_clause"]
+                qtype = item["query_type"]
 
-            # 1. Run Naive Pipeline
-            t0 = time.perf_counter()
-            naive_hits = naive_retriever.retrieve(query, top_k=5)
-            t_naive = (time.perf_counter() - t0) * 1000.0
-            naive_chunks_ret = [c for c, _ in naive_hits]
-            naive_hit, naive_mrr, _ = self.evaluate_retrieval(naive_chunks_ret, exp_doc, exp_sec)
+                # 1. Run Naive Pipeline
+                t0 = time.perf_counter()
+                naive_hits = naive_retriever.retrieve(query, top_k=5)
+                t_naive = (time.perf_counter() - t0) * 1000.0
+                naive_chunks_ret = [c for c, _ in naive_hits]
+                naive_hit, naive_mrr, _ = self.evaluate_retrieval(naive_chunks_ret, exp_doc, exp_sec)
 
-            results["naive"]["hits"] += 1 if naive_hit else 0
-            results["naive"]["mrr_sum"] += naive_mrr
-            results["naive"]["latencies"].append(t_naive)
-            results["naive"]["per_query"].append(
-                {
-                    "id": qid,
-                    "type": qtype,
-                    "hit": naive_hit,
-                    "mrr": naive_mrr,
-                    "latency_ms": t_naive,
-                }
-            )
+                results["naive"]["hits"] += 1 if naive_hit else 0
+                results["naive"]["mrr_sum"] += naive_mrr
+                results["naive"]["latencies"].append(t_naive)
+                results["naive"]["per_query"].append(
+                    {
+                        "id": qid,
+                        "type": qtype,
+                        "hit": naive_hit,
+                        "mrr": naive_mrr,
+                        "latency_ms": t_naive,
+                    }
+                )
 
-            # 2. Run Hybrid Pipeline
-            t0 = time.perf_counter()
-            fused_candidates = hybrid_retriever.retrieve(query, top_k=20)
-            reranked_hits = reranker.rerank(query, [c for c, _ in fused_candidates], top_k=5)
-            t_hybrid = (time.perf_counter() - t0) * 1000.0
-            hybrid_chunks_ret = [c for c, _ in reranked_hits]
-            hybrid_hit, hybrid_mrr, table_intact = self.evaluate_retrieval(
-                hybrid_chunks_ret, exp_doc, exp_sec
-            )
+                # 2. Run Hybrid Pipeline
+                t0 = time.perf_counter()
+                fused_candidates = hybrid_retriever.retrieve(query, top_k=20)
+                reranked_hits = reranker.rerank(query, [c for c, _ in fused_candidates], top_k=5)
+                t_hybrid = (time.perf_counter() - t0) * 1000.0
+                hybrid_chunks_ret = [c for c, _ in reranked_hits]
+                hybrid_hit, hybrid_mrr, table_intact = self.evaluate_retrieval(
+                    hybrid_chunks_ret, exp_doc, exp_sec
+                )
 
-            results["hybrid"]["hits"] += 1 if hybrid_hit else 0
-            results["hybrid"]["mrr_sum"] += hybrid_mrr
-            results["hybrid"]["latencies"].append(t_hybrid)
-            results["hybrid"]["per_query"].append(
-                {
-                    "id": qid,
-                    "type": qtype,
-                    "hit": hybrid_hit,
-                    "mrr": hybrid_mrr,
-                    "latency_ms": t_hybrid,
-                    "table_intact": table_intact,
-                }
-            )
+                results["hybrid"]["hits"] += 1 if hybrid_hit else 0
+                results["hybrid"]["mrr_sum"] += hybrid_mrr
+                results["hybrid"]["latencies"].append(t_hybrid)
+                results["hybrid"]["per_query"].append(
+                    {
+                        "id": qid,
+                        "type": qtype,
+                        "hit": hybrid_hit,
+                        "mrr": hybrid_mrr,
+                        "latency_ms": t_hybrid,
+                        "table_intact": table_intact,
+                    }
+                )
+        finally:
+            if naive_retriever is not None:
+                try:
+                    naive_retriever.close()
+                except Exception:
+                    pass
+            if hybrid_retriever is not None:
+                try:
+                    hybrid_retriever.close()
+                except Exception:
+                    pass
 
         # Aggregate metrics
         naive_recall = (

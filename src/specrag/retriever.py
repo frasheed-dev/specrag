@@ -57,11 +57,26 @@ class QdrantDenseRetriever(BaseRetriever):
         self.model_name = embedding_model_name or settings.embedding_model_name
 
         # Initialize Qdrant Client (local disk persistence)
-        self.client = QdrantClient(path=self.storage_path)
+        self.client: QdrantClient | None = QdrantClient(path=self.storage_path)
 
         # Lazy loaded model
         self._model: SentenceTransformer | None = None
         self._chunks_by_id: dict[str, DocumentChunk] = {}
+
+    def close(self) -> None:
+        """Close Qdrant client connection cleanly to prevent Python 3.13 shutdown errors."""
+        if getattr(self, "client", None) is not None:
+            try:
+                self.client.close()
+            except Exception:
+                pass
+            self.client = None
+
+    def __del__(self) -> None:
+        try:
+            self.close()
+        except Exception:
+            pass
 
     @property
     def model(self) -> SentenceTransformer:
@@ -208,6 +223,11 @@ class HybridRRFRetriever(BaseRetriever):
 
         sorted_chunks = sorted(rrf_scores.items(), key=lambda x: x[1], reverse=True)[:top_k]
         return [(chunk_map[cid], score) for cid, score in sorted_chunks]
+
+    def close(self) -> None:
+        """Close underlying dense client cleanly."""
+        if hasattr(self, "dense") and self.dense is not None:
+            self.dense.close()
 
 
 class CrossEncoderReranker:
