@@ -201,7 +201,11 @@ sequenceDiagram
 BM25 produces unbounded lexical scores, whereas dense encoders generate bounded cosine similarities ($[-1, 1]$). Direct linear combination introduces arbitrary scale bias.
 
 Reciprocal Rank Fusion (RRF) resolves score distribution mismatch by scoring chunks strictly on ordinal rank position rather than raw score magnitude:
-$$\text{RRF Score}(d) = \sum_{m \in \{\text{Dense}, \text{Sparse}\}} \frac{1}{k_0 + \text{Rank}_m(d)}$$
+
+$$
+\text{RRF Score}(d) = \sum_{m \in \{\text{Dense}, \text{Sparse}\}} \frac{1}{k_0 + \text{Rank}_m(d)}
+$$
+
 where $k_0 = 60$ is a standard smoothing constant. Documents retrieved by both lexical and dense retrievers naturally receive higher priority in the candidate pool.
 
 #### Bi-Encoder vs. Cross-Encoder Mechanics
@@ -338,11 +342,19 @@ Evaluated across **4 Official Third-Party Hugging Face Public Benchmarks** on an
 SpecRAG evaluates retrieval performance using standard Information Retrieval (IR) metrics with strict ground-truth answer containment:
 
 #### 1. Hit Rate @ 5 (Recall@5)
-$$\text{Recall@}k = \frac{1}{|Q|} \sum_{q \in Q} \mathbb{I}\left(\text{rank}(d^*_q) \le k\right)$$
-Measures whether the evidence-bearing chunk $d^*_q$ resides within the top-$k$ returned candidates ($k=5$). In high-distractor corpora like `TechQA` (734 chunks), naive fixed-window dense retrieval collapses to **22.0%** due to vocabulary overlap without answer relevance, whereas SpecRAG maintains **94.0%** recall (+72.0% absolute improvement).
+
+$$
+\text{Recall}@k = \frac{1}{|Q|} \sum_{q \in Q} \mathbb{I}\left(\text{rank}(d_q^*) \le k\right)
+$$
+
+Measures whether the evidence-bearing chunk $d_q^*$ resides within the top-$k$ returned candidates ($k=5$). In high-distractor corpora like `TechQA` (734 chunks), naive fixed-window dense retrieval collapses to **22.0%** due to vocabulary overlap without answer relevance, whereas SpecRAG maintains **94.0%** recall (+72.0% absolute improvement).
 
 #### 2. Mean Reciprocal Rank (MRR)
-$$\text{MRR} = \frac{1}{|Q|} \sum_{i=1}^{|Q|} \frac{1}{\text{rank}_i}$$
+
+$$
+\text{MRR} = \frac{1}{|Q|} \sum_{i=1}^{|Q|} \frac{1}{\text{rank}_i}
+$$
+
 Quantifies top-1 ranking precision. In financial tabular retrieval (`FinQA` and `TAT-DQA`), SpecRAG achieves **1.000 MRR**: for every query, the exact ground-truth table is ranked at position 1.
 
 #### 3. Latency Profile: Live Stream vs. Offline Pack vs. CPU Reference
