@@ -51,16 +51,20 @@ class QdrantDenseRetriever(BaseRetriever):
         collection_name: str = "specrag_chunks",
         storage_path: str | Path | None = None,
         embedding_model_name: str | None = None,
+        embedding_model: SentenceTransformer | None = None,
     ):
         self.collection_name = collection_name
         self.storage_path = str(storage_path or settings.qdrant_storage_path)
         self.model_name = embedding_model_name or settings.embedding_model_name
 
-        # Initialize Qdrant Client (local disk persistence)
-        self.client: QdrantClient | None = QdrantClient(path=self.storage_path)
+        # Initialize Qdrant Client (in-memory for interactive sessions or local disk persistence)
+        if self.storage_path == ":memory:":
+            self.client: QdrantClient | None = QdrantClient(location=":memory:")
+        else:
+            self.client = QdrantClient(path=self.storage_path)
 
-        # Lazy loaded model
-        self._model: SentenceTransformer | None = None
+        # Lazy loaded or injected model
+        self._model: SentenceTransformer | None = embedding_model
         self._chunks_by_id: dict[str, DocumentChunk] = {}
 
     def close(self) -> None:
@@ -233,9 +237,13 @@ class HybridRRFRetriever(BaseRetriever):
 class CrossEncoderReranker:
     """Scores (query, document) candidate pairs using BAAI/bge-reranker-base."""
 
-    def __init__(self, model_name: str | None = None):
+    def __init__(
+        self,
+        model_name: str | None = None,
+        reranker_model: CrossEncoder | None = None,
+    ):
         self.model_name = model_name or settings.reranker_model_name
-        self._reranker: CrossEncoder | None = None
+        self._reranker: CrossEncoder | None = reranker_model
 
     @property
     def reranker(self) -> CrossEncoder:

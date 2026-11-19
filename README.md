@@ -434,7 +434,16 @@ python -m specrag.cli benchmark --dataset tatqa --source hf --limit 50  # Comple
 python -m specrag.cli benchmark --dataset techqa --source hf --limit 50 # Enterprise technical specifications (TechQA)
 ```
 
-### 4. Running Tests
+### 4. Launching the Local Document Chat UI (Streamlit)
+
+Install the optional UI extra and launch the interactive chat app to upload your own PDF, Markdown, DOCX, TXT, or HTML documents and query them with grounded verbatim citations:
+
+```bash
+uv pip install -e ".[ui]"
+python -m specrag.cli ui
+```
+
+### 5. Running Tests
 
 ```bash
 uv run pytest tests/
@@ -470,6 +479,9 @@ specrag/
 │       ├── generator.py                # Structured Citation QA Generator
 │       ├── llm_factory.py              # Zero-cost multi-provider cascade router
 │       ├── evaluator.py                # Benchmark evaluation harness
+│       ├── pipeline.py                 # Interactive session pipeline (ingest + hybrid query)
+│       ├── ui/
+│       │   └── app.py                  # Optional local Streamlit document chat UI
 │       └── ingestion/
 │           └── converter.py            # MarkItDown + PyMuPDF4LLM PDF-to-Markdown engine
 └── tests/

@@ -4,8 +4,12 @@ Provides CLI commands for:
 - specrag benchmark: Runs comparative evaluation on Golden Queries
 - specrag ingest: Converts and indexes raw PDF/Markdown specifications
 - specrag query: Queries specification knowledge base with Naive, Hybrid, or Reranked modes
+- specrag ui: Launches the local Streamlit document chat web interface
 """
 
+import importlib.util
+import subprocess
+import sys
 import time
 from pathlib import Path
 
@@ -293,6 +297,43 @@ def query(
                 dense_to_close.close()
             except Exception:
                 pass
+
+
+@app.command()
+def ui(
+    port: int = typer.Option(8501, "--port", "-p", help="Port for the local Streamlit server"),
+    host: str = typer.Option("localhost", "--host", help="Host address to bind the server to"),
+) -> None:
+    """Launch the local SpecRAG Streamlit document chat web interface."""
+    if importlib.util.find_spec("streamlit") is None:
+        console.print(
+            "[bold red]Error:[/bold red] Streamlit is not installed.\n"
+            r'Install the optional UI dependencies with: [bold cyan]uv pip install -e ".\[ui]"[/bold cyan]'
+        )
+        raise typer.Exit(code=1)
+
+    app_path = Path(__file__).resolve().parent / "ui" / "app.py"
+    if not app_path.exists():
+        console.print(f"[bold red]Error:[/bold red] UI module not found: {app_path}")
+        raise typer.Exit(code=1)
+
+    console.print(
+        f"[bold cyan]Launching SpecRAG Chat UI[/bold cyan] at [green]http://{host}:{port}[/green]..."
+    )
+    subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "streamlit",
+            "run",
+            str(app_path),
+            "--server.port",
+            str(port),
+            "--server.address",
+            host,
+        ],
+        check=False,
+    )
 
 
 if __name__ == "__main__":
