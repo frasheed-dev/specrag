@@ -123,6 +123,7 @@ class SpecRAGPipeline:
         query_text: str,
         top_k: int = 5,
         use_reranker: bool = True,
+        router: Any | None = None,
     ) -> QueryResult:
         """Retrieve relevant chunks via Hybrid RRF (+ optional Cross-Encoder) and synthesize answer."""
         t0 = time.perf_counter()
@@ -150,17 +151,32 @@ class SpecRAGPipeline:
         else:
             retrieved_chunks = [c for c, _ in candidates[:top_k]]
 
+        if router is not None:
+            self.generator.router = router
+
         generation_error: str | None = None
         try:
             answer, provider = self.generator.generate_answer(query_text, retrieved_chunks)
+            if provider == "fallback" and answer.answer.startswith("Generation error:"):
+                generation_error = answer.answer.removeprefix("Generation error:").strip()
+                answer = SpecAnswer(
+                    answer=(
+                        "Retrieved the most relevant passages below, but LLM synthesis failed. "
+                        "Select a provider (e.g. Gemini with an API key, or Ollama with a running "
+                        "model such as `glm-5:cloud`) in the sidebar or configure `.env`."
+                    ),
+                    confidence=0.0,
+                    is_answerable=False,
+                )
+                provider = "unavailable"
         except Exception as exc:
             logger.warning(f"LLM synthesis failed: {exc}")
             generation_error = str(exc)
             answer = SpecAnswer(
                 answer=(
                     "Retrieved the most relevant passages below, but LLM synthesis failed. "
-                    "Configure an API key in `.env` (e.g. GROQ_API_KEY, NVIDIA_API_KEY) "
-                    "or start local Ollama to enable synthesized answers."
+                    "Select a provider (e.g. Gemini with an API key, or Ollama with a running "
+                    "model such as `glm-5:cloud`) in the sidebar or configure `.env`."
                 ),
                 confidence=0.0,
                 is_answerable=False,

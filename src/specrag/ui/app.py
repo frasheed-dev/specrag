@@ -15,7 +15,7 @@ import streamlit as st
 from sentence_transformers import CrossEncoder, SentenceTransformer
 
 from specrag.config import settings
-from specrag.llm_factory import get_available_providers
+from specrag.llm_factory import PROVIDER_ENDPOINTS, create_llm_router, get_available_providers
 from specrag.pipeline import QueryResult, SpecRAGPipeline
 
 
@@ -164,9 +164,37 @@ def main() -> None:
             st.caption("No documents indexed yet.")
 
         st.divider()
+        st.header("LLM Settings")
+        provider_options = ["auto", "gemini", "ollama", "groq", "nvidia", "openrouter", "github"]
+        selected_provider = st.selectbox(
+            "Provider",
+            options=provider_options,
+            index=0,
+            help="Use 'auto' for .env cascade, 'gemini' for Gemini API, or 'ollama' for local/cloud Ollama models.",
+        )
+
+        custom_model: str | None = None
+        custom_api_key: str | None = None
+        if selected_provider != "auto":
+            default_model = PROVIDER_ENDPOINTS[selected_provider][1]
+            custom_model = st.text_input(
+                "Model",
+                value=default_model,
+                help=(
+                    "For Ollama, enter any tag from `ollama list` (e.g. `glm-5:cloud`, `llama3.2`). "
+                    "For Gemini, e.g. `gemini-2.5-flash`."
+                ),
+            )
+            if selected_provider != "ollama":
+                custom_api_key = st.text_input(
+                    f"{selected_provider.upper()} API Key (optional if in .env)",
+                    type="password",
+                    placeholder="Paste API key for this session...",
+                )
+
         providers = get_available_providers()
         provider_names = ", ".join(p.name for p in providers) if providers else "none"
-        st.caption(f"**LLM Router Cascade:** `{provider_names}`")
+        st.caption(f"**Configured in .env:** `{provider_names}`")
 
     st.title("SpecRAG Document Chat")
     st.caption(
@@ -187,12 +215,18 @@ def main() -> None:
         with st.chat_message("user"):
             st.markdown(prompt)
 
+        router = create_llm_router(
+            provider=selected_provider,
+            api_key=custom_api_key,
+            model=custom_model,
+        )
         with st.chat_message("assistant"):
             with st.spinner("Searching documents and synthesizing grounded answer..."):
                 result: QueryResult = pipeline.query(
                     prompt,
                     top_k=top_k,
                     use_reranker=use_reranker,
+                    router=router,
                 )
             render_assistant_result(result)
 

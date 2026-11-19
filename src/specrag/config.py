@@ -19,7 +19,9 @@ class Settings(BaseSettings):
     openrouter_api_key: str | None = None
     github_token: str | None = None
     gemini_api_key: str | None = None
+    gemini_model: str = "gemini-2.5-flash"
     ollama_base_url: str = "http://localhost:11434/v1"
+    ollama_model: str = "llama3.2"
 
     # Default Provider selection
     specrag_llm_provider: Literal[

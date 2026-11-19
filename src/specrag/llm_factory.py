@@ -72,21 +72,65 @@ def get_available_providers() -> list[ProviderConfig]:
                 name="gemini",
                 base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
                 api_key=settings.gemini_api_key,
-                default_model="gemini-1.5-flash",
+                default_model=settings.gemini_model,
             )
         )
 
-    # 6. Local Ollama (fallback when no API keys are present)
+    # 6. Local Ollama (supports both local models and Ollama cloud models like glm-5:cloud)
     providers.append(
         ProviderConfig(
             name="ollama",
             base_url=settings.ollama_base_url,
             api_key="ollama",
-            default_model="llama3.2",
+            default_model=settings.ollama_model,
         )
     )
 
     return providers
+
+
+PROVIDER_ENDPOINTS: dict[str, tuple[str, str]] = {
+    "groq": ("https://api.groq.com/openai/v1", "llama-3.3-70b-versatile"),
+    "nvidia": ("https://integrate.api.nvidia.com/v1", "meta/llama-3.1-70b-instruct"),
+    "openrouter": ("https://openrouter.ai/api/v1", "meta-llama/llama-3.3-70b-instruct:free"),
+    "github": ("https://models.inference.ai.azure.com", "gpt-4o-mini"),
+    "gemini": ("https://generativelanguage.googleapis.com/v1beta/openai/", settings.gemini_model),
+    "ollama": (settings.ollama_base_url, settings.ollama_model),
+}
+
+
+def create_llm_router(
+    provider: str = "auto",
+    api_key: str | None = None,
+    model: str | None = None,
+) -> "LLMRouter":
+    """Create an LLMRouter with optional runtime provider, API key, and model overrides."""
+    router = LLMRouter(preferred_provider=provider)
+    if provider == "auto" or provider not in PROVIDER_ENDPOINTS:
+        return router
+
+    base_url, default_model = PROVIDER_ENDPOINTS[provider]
+    existing = next((p for p in router.providers if p.name == provider), None)
+    resolved_key = (
+        api_key.strip()
+        if api_key and api_key.strip()
+        else (existing.api_key if existing else ("ollama" if provider == "ollama" else ""))
+    )
+    resolved_model = (
+        model.strip()
+        if model and model.strip()
+        else (existing.default_model if existing else default_model)
+    )
+
+    if resolved_key:
+        override = ProviderConfig(
+            name=provider,
+            base_url=existing.base_url if existing else base_url,
+            api_key=resolved_key,
+            default_model=resolved_model,
+        )
+        router.providers = [override] + [p for p in router.providers if p.name != provider]
+    return router
 
 
 class LLMRouter:

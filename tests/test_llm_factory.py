@@ -1,6 +1,11 @@
 from unittest.mock import MagicMock, patch
 
-from specrag.llm_factory import LLMRouter, ProviderConfig, get_available_providers
+from specrag.llm_factory import (
+    LLMRouter,
+    ProviderConfig,
+    create_llm_router,
+    get_available_providers,
+)
 
 
 def test_available_providers_contains_ollama_fallback():
@@ -45,3 +50,22 @@ def test_llm_router_fallback_mechanism():
 
         assert provider == "test_success"
         assert content == "Success response from provider 2"
+
+
+def test_create_llm_router_gemini_override():
+    router = create_llm_router(
+        provider="gemini",
+        api_key="test-gemini-key",
+        model="gemini-2.5-flash",
+    )
+    order = list(router._get_provider_order())
+    assert order[0].name == "gemini"
+    assert order[0].api_key == "test-gemini-key"
+    assert order[0].default_model == "gemini-2.5-flash"
+
+
+def test_create_llm_router_ollama_custom_model():
+    router = create_llm_router(provider="ollama", model="glm-5:cloud")
+    order = list(router._get_provider_order())
+    assert order[0].name == "ollama"
+    assert order[0].default_model == "glm-5:cloud"
