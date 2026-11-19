@@ -15,6 +15,7 @@ class Settings(BaseSettings):
 
     # API Keys for LLM Cascade
     groq_api_key: str | None = None
+    groq_model: str = "openai/gpt-oss-120b"
     nvidia_api_key: str | None = None
     openrouter_api_key: str | None = None
     github_token: str | None = None

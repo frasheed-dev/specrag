@@ -28,7 +28,7 @@ def get_available_providers() -> list[ProviderConfig]:
                 name="groq",
                 base_url="https://api.groq.com/openai/v1",
                 api_key=settings.groq_api_key,
-                default_model="llama-3.3-70b-versatile",
+                default_model=settings.groq_model,
             )
         )
 
@@ -90,7 +90,7 @@ def get_available_providers() -> list[ProviderConfig]:
 
 
 PROVIDER_ENDPOINTS: dict[str, tuple[str, str]] = {
-    "groq": ("https://api.groq.com/openai/v1", "llama-3.3-70b-versatile"),
+    "groq": ("https://api.groq.com/openai/v1", settings.groq_model),
     "nvidia": ("https://integrate.api.nvidia.com/v1", "meta/llama-3.1-70b-instruct"),
     "openrouter": ("https://openrouter.ai/api/v1", "meta-llama/llama-3.3-70b-instruct:free"),
     "github": ("https://models.inference.ai.azure.com", "gpt-4o-mini"),

@@ -165,12 +165,15 @@ def main() -> None:
 
         st.divider()
         st.header("LLM Settings")
-        provider_options = ["auto", "gemini", "ollama", "groq", "nvidia", "openrouter", "github"]
+        provider_options = ["groq", "auto", "ollama", "gemini", "nvidia", "openrouter", "github"]
         selected_provider = st.selectbox(
             "Provider",
             options=provider_options,
             index=0,
-            help="Use 'auto' for .env cascade, 'gemini' for Gemini API, or 'ollama' for local/cloud Ollama models.",
+            help=(
+                "Recommended: 'groq' with a free API key from console.groq.com/keys. "
+                "Use 'auto' for .env cascade or 'ollama' for local models."
+            ),
         )
 
         custom_model: str | None = None
@@ -181,16 +184,18 @@ def main() -> None:
                 "Model",
                 value=default_model,
                 help=(
-                    "For Ollama, enter any tag from `ollama list` (e.g. `glm-5:cloud`, `llama3.2`). "
-                    "For Gemini, e.g. `gemini-2.5-flash`."
+                    "For Groq: e.g. `openai/gpt-oss-120b`. "
+                    "For Ollama: any local tag from `ollama list` (e.g. `llama3.2`)."
                 ),
             )
             if selected_provider != "ollama":
                 custom_api_key = st.text_input(
                     f"{selected_provider.upper()} API Key (optional if in .env)",
                     type="password",
-                    placeholder="Paste API key for this session...",
+                    placeholder="Paste API key and press Enter...",
                 )
+                if selected_provider == "groq" and not custom_api_key:
+                    st.caption("Free Groq API key: [console.groq.com/keys](https://console.groq.com/keys)")
 
         providers = get_available_providers()
         provider_names = ", ".join(p.name for p in providers) if providers else "none"

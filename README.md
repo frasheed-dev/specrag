@@ -291,7 +291,7 @@ The `llm_factory.py` module implements an automated fallback cascade across zero
 
 ```mermaid
 flowchart TD
-    Start["User Query"] --> P1["1. Groq\n(llama-3.3-70b-versatile)"]
+    Start["User Query"] --> P1["1. Groq\n(openai/gpt-oss-120b)"]
     P1 -->|HTTP 429 Rate Limit| P2["2. NVIDIA NIM\n(meta/llama-3.3-70b-instruct)"]
     P2 -->|HTTP 429 Rate Limit| P3["3. OpenRouter\n(:free tier)"]
     P3 -->|HTTP 429 Rate Limit| P4["4. GitHub Models\n(gpt-4o-mini)"]
@@ -434,14 +434,24 @@ python -m specrag.cli benchmark --dataset tatqa --source hf --limit 50  # Comple
 python -m specrag.cli benchmark --dataset techqa --source hf --limit 50 # Enterprise technical specifications (TechQA)
 ```
 
-### 4. Launching the Local Document Chat UI (Streamlit)
+### 4. Local Document Chat UI (Streamlit)
 
-Install the optional UI extra and launch the interactive chat app to upload your own PDF, Markdown, DOCX, TXT, or HTML documents and query them with grounded verbatim citations:
+SpecRAG includes an optional local Streamlit web app for uploading technical specifications (PDF, Markdown, DOCX, TXT, HTML) and chatting with grounded, verbatim citations using the structure-aware hybrid pipeline (`BM25 + Qdrant RRF + Cross-Encoder`).
 
 ```bash
+# Install optional UI dependencies
 uv pip install -e ".[ui]"
+
+# Launch the local chat app at http://localhost:8501
 python -m specrag.cli ui
 ```
+
+**Testing with a Free Groq API Key (Recommended):**
+1. Create a free API key at [console.groq.com/keys](https://console.groq.com/keys) (no credit card required).
+2. In the app sidebar under **LLM Settings**, keep **Provider** set to `groq` and **Model** set to `openai/gpt-oss-120b`, paste your API key (or set `GROQ_API_KEY` in `.env`), and press **Enter**.
+3. Upload one or more documents, click **Index Files**, and ask questions. Expand **Citations & Retrieved Evidence** under any reply to inspect cited sections, verbatim quotes, and preserved Markdown tables.
+
+*(Local offline inference via Ollama is also supported by selecting `ollama` and entering any locally pulled model such as `llama3.2`.)*
 
 ### 5. Running Tests
 
