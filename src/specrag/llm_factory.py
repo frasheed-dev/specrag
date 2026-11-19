@@ -129,7 +129,9 @@ def create_llm_router(
             api_key=resolved_key,
             default_model=resolved_model,
         )
-        router.providers = [override] + [p for p in router.providers if p.name != provider]
+        router.providers = [override]
+    else:
+        router.providers = []
     return router
 
 
@@ -164,9 +166,16 @@ class LLMRouter:
         Returns:
             tuple[content, provider_name]
         """
-        last_error: Exception | None = None
+        ordered_providers = list(self._get_provider_order())
+        if not ordered_providers:
+            raise RuntimeError(
+                f"No API key configured for provider '{self.preferred_provider}'. "
+                "Enter an API key in the sidebar or set it in `.env`."
+            )
 
-        for provider in self._get_provider_order():
+        errors: list[str] = []
+
+        for provider in ordered_providers:
             client = OpenAI(
                 base_url=provider.base_url,
                 api_key=provider.api_key,
@@ -191,17 +200,15 @@ class LLMRouter:
                 logger.warning(
                     f"Provider {provider.name} failed with {type(e).__name__}: {e}. Falling back..."
                 )
-                last_error = e
+                errors.append(f"{provider.name} ({target_model}): {e}")
                 continue
             except Exception as e:
                 # E.g. ModelNotFound or 401 Unauthorized
                 logger.warning(f"Provider {provider.name} encountered error: {e}. Falling back...")
-                last_error = e
+                errors.append(f"{provider.name} ({target_model}): {e}")
                 continue
 
-        raise RuntimeError(
-            f"All configured LLM providers failed in cascade. Last error: {last_error}"
-        )
+        raise RuntimeError("All configured LLM providers failed: " + " | ".join(errors))
 
 
 def get_llm_router() -> LLMRouter:
